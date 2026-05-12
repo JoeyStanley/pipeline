@@ -148,23 +148,41 @@ function(input, output, session) {
     output$midpoints_plot <- renderPlot({
         generate_plot()
     })
+    
+    midpoint_df_to_plot <- reactive({
+        req(midpoints_df())
+        midpoints_df() |> 
+            filter(speaker_id %in% input$speaker_selection,
+                   phoneme %in% input$vowels,
+                   allophone_environment %in% input$environments)
+    })
+    trajectories_df_to_plot <- reactive({
+        req(trajectories_df())
+        trajectories_df() |> 
+            filter(speaker_id %in% input$speaker_selection,
+                   phoneme %in% input$vowels,
+                   allophone_environment %in% input$environments)
+    })
+    vowel_space_df_for_hull <- reactive({
+        req(midpoints_df())
+        midpoints_df() %>%
+            filter(speaker_id %in% input$speaker_selection,
+                   allophone %in% c("BEET", "BIT", "BAIT", "BET", "BAT", "BOT", "BOUGHT", "BOAT", "PUT", "BOOT")) %>%
+            group_by(speaker_id, allophone) %>%
+            summarize(across(c(F1, F2), mean), .groups = "drop_last")
+    })
 
     # A function for generating the plot.
     generate_plot <- function() {
-
-        ### Prep the data ----
-        midpoint_df <- midpoints_df() %>%
-            filter(speaker_id %in% input$speaker_selection,
-                   phoneme %in% input$vowels,
-                   allophone_environment %in% input$environments)
-
-        trajectories_df <- full_df() %>%
-            filter(speaker_id %in% input$speaker_selection,
-                   phoneme %in% input$vowels,
-                   allophone_environment %in% input$environments)
-
+        
+        ### Get the data. (Offloaded to reactive so it only reruns data prep if needed and not for small plot changes.)
+        midpoint_df <- midpoint_df_to_plot()
+        trajectories_df <- trajectories_df_to_plot()
+        # Elsewhere allophones, for the hull
+        vowel_space <- vowel_space_df_for_hull()
+            
         # Get different summaries of the data for trajectories.
-        summarized_trajectories_df <- trajectories_df %>%
+        summarized_trajectories_df <- trajectories_df |> 
             mutate(plotting_group = vowel_id)
         if (input$trajectory_type == "mean") {
             summarized_trajectories_df <- trajectories_df %>%
@@ -202,13 +220,6 @@ function(input, output, session) {
                 group_by(phoneme, allophone) %>%
                 summarize(across(matches("F\\d"), mean), .groups = "drop_last")
         }
-
-        # Elsewhere allophones, for the hull
-        vowel_space <- midpoints_df() %>%
-            filter(speaker_id %in% input$speaker_selection,
-                   allophone %in% c("BEET", "BIT", "BAIT", "BET", "BAT", "BOT", "BOUGHT", "BOAT", "PUT", "BOOT")) %>%
-            group_by(speaker_id, allophone) %>%
-            summarize(across(c(F1, F2), mean), .groups = "drop_last")
 
         # Reference points
         reference_points <- vowel_space %>%
