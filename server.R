@@ -4,8 +4,7 @@ options(shiny.maxRequestSize=100*1024^2)
 
 function(input, output, session) {
     
-    
-    ## Get data (and subsets) ----
+    ## Add and remove data ----
     
     full_df        <- reactiveVal(NULL)
     loaded_files   <- reactiveVal(character(0))  # tracks file names for the UI list
@@ -100,7 +99,7 @@ function(input, output, session) {
     })
     
     
-    
+    ### Get subsets----
 
     # Create just a midpoints df.
     midpoints_df <- reactive({ 
@@ -112,22 +111,23 @@ function(input, output, session) {
     })
     # Create a trajectory df. Same as full, but here for clarity.
     trajectories_df <- reactive({ full_df() })
-
-    ## Show all data ----
+    
+    
+    ### Show all data ----
     output$show_all_data <- DT::renderDataTable(DT::datatable({
         full_df()
     }))
 
-    ## Export data ----
+    ### Export data ----
+    
     output$export_processed <- downloadHandler(
-        filename = function() { "formants_processed.csv" },
+        filename = function() { "pipeline_output.csv" },
         content  = function(file) {
-            full_df() %>%
-                write_csv(file = file)
+            full_df() %>% write_csv(file = file)
         }
     )
 
-    ## Update UI ----
+    ## Update other UI elements ----
     
     # Make it clear that list of speakers should update when "process" button is clicked and not necessarily when full_df() updates. 
     observeEvent(input$process_uploaded_button, {
@@ -139,6 +139,8 @@ function(input, output, session) {
                               selected = head(list_of_speakers, 1)
             )
     })
+    
+    
 
     ## Download image ----
 

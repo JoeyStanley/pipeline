@@ -12,6 +12,8 @@ fluidPage(
             
             sidebarLayout(
                 
+                ### Upload ----
+                
                 sidebarPanel(
                     width = 3,
                     h3("Upload"),
@@ -57,17 +59,15 @@ fluidPage(
                     ),
                     hr(),
                     
-                    
-                    
-                    
-                    
-    
+
+                    ### Process ----    
                    
                     h3("Process"),
                     actionButton(width = "100%", "process_uploaded_button", "Process my data"),
                     p("You'll know the data loaded correctly when a table appears on the right."),
                     hr(),
                     
+                    ### Manage datasets ----
                     
                     h3("Manage datasets"),
                     fluidRow(
@@ -79,6 +79,8 @@ fluidPage(
                         )
                     ),
                     hr(),
+                    
+                    ### Download ----
                     
                     h3("Download"),
                     p("Click the button below to download this processed version of the data. It is your same data but it has been cleaned and gone through a pipeline of processing steps already."),
