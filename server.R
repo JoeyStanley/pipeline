@@ -1,6 +1,6 @@
 
-# Increase max upload size from 5MG to 50MB: https://stackoverflow.com/questions/18037737/how-to-change-maximum-upload-size-exceeded-restriction-in-shiny-and-save-user
-options(shiny.maxRequestSize=50*1024^2)
+# Increase max upload size from 5MG to 100MB: https://stackoverflow.com/questions/18037737/how-to-change-maximum-upload-size-exceeded-restriction-in-shiny-and-save-user
+options(shiny.maxRequestSize=100*1024^2)
 
 function(input, output, session) {
     
@@ -12,7 +12,7 @@ function(input, output, session) {
                      value = 0,
                      {
                          
-                         incProgress(1/7, detail = "Reading file…")
+                         incProgress(1/6, detail = "Reading file…")
                          # Get the data path. If uploaded, then pull from there. If sample, then pull from local data.
                          path_to_data <- if(input$data_source == "sample") {
                              "data/joey_darla.csv"
@@ -22,23 +22,24 @@ function(input, output, session) {
                          }
                          raw <- read_csv(path_to_data, show_col_types = FALSE)
                          
-                         incProgress(1/7, detail = "Cleaning columns…")
-                         cleaned <- clean_darla_columns(raw)
-                         cleaned <- manually_reclassify_some_words(cleaned)
+                         # Prep data according to data source.
+                         incProgress(1/6, detail = "Prepping data…")
+                         cleaned <- if (input$data_source == "new-fave") {
+                             prep_newfave_data(raw)
+                         } else {
+                             prep_darla_data(raw)
+                         }
                          
-                         incProgress(1/7, detail = "Reshaping trajectories…")
-                         reshaped <- reshape_trajectories(cleaned)
+                         incProgress(1/6, message = "Applying Order of Operations", detail = "Step 1: Coding allophones…")
+                         ooo1 <- ooo1_code_allophones(cleaned)
                          
-                         incProgress(1/7, message = "Applying Order of Operations", detail = "1: Coding allophones…")
-                         ooo1 <- ooo1_code_allophones(reshaped)
-                         
-                         incProgress(1/7, detail = "2: Removing outliers…")
+                         incProgress(1/6, detail = "Step 2: Removing outliers… (Note: this is the longest step)")
                          ooo2 <- ooo2_remove_outliers(ooo1)
                          
-                         incProgress(1/7, detail = "3: Normalizing…")
+                         incProgress(1/6, detail = "Step 3: Normalizing…")
                          ooo3 <- ooo3_normalize(ooo2)
                          
-                         incProgress(1/7, detail = "4: Filtering…")
+                         incProgress(1/6, detail = "Step 4: Filtering…")
                          ooo4 <- ooo4_filter_otherwise_good_data(ooo3)
                          return(ooo4)
                          
@@ -46,7 +47,13 @@ function(input, output, session) {
     })
 
     # Create just a midpoints df.
-    midpoints_df <- reactive({ full_df() |> filter(percent == 50) })
+    midpoints_df <- reactive({ 
+        full_df() |> 
+            filter(prop_time > 0.4,
+                   prop_time < 0.6) |> 
+            summarize(F1 = mean(F1),
+                      F2 = mean(F2), .by = -c(prop_time, time, matches("F\\d")))
+    })
     # Create a trajectory df. Same as full, but here for clarity.
     trajectories_df <- reactive({ full_df() })
 
@@ -133,15 +140,15 @@ function(input, output, session) {
             
         # Get different summaries of the data for trajectories.
         summarized_trajectories_df <- trajectories_df |> 
-            mutate(plotting_group = vowel_id)
+            mutate(plotting_group = token_id)
         if (input$trajectory_type == "mean") {
             summarized_trajectories_df <- trajectories_df %>%
-                group_by(phoneme, allophone, percent) %>%
+                group_by(phoneme, allophone, prop_time) %>%
                 summarize(across(c(F1, F2), .fns = mean), .groups = "drop_last") %>%
                 mutate(plotting_group = allophone)
         } else if (input$trajectory_type == "median") {
             summarized_trajectories_df <- trajectories_df %>%
-                group_by(phoneme, allophone, percent) %>%
+                group_by(phoneme, allophone, prop_time) %>%
                 summarize(across(c(F1, F2), .fns = median), .groups = "drop_last") %>%
                 mutate(plotting_group = allophone)
         } else if (input$trajectory_type == "smoothed") {
@@ -149,8 +156,8 @@ function(input, output, session) {
                 pivot_longer(cols = c(F1, F2), names_to = "formant", values_to = "hz") %>%
                 group_by(phoneme, allophone, formant) %>%
                 nest() %>%
-                mutate(mdl = map(data, ~gam(hz ~ percent + s(percent, k = 4), data = .)),
-                       preds = map(mdl, ~get_predictions(., cond = list(percent = 20:80),
+                mutate(mdl = map(data, ~gam(hz ~ prop_time + s(prop_time, k = 4), data = .)),
+                       preds = map(mdl, ~get_predictions(., cond = list(prop_time = 20:80),
                                                          print.summary = FALSE,
                                                          rm.ranef = FALSE))) %>%
                 select(-data, -mdl) %>%
@@ -164,7 +171,7 @@ function(input, output, session) {
         # Labels (mean for points, onset for trajectories)
         if (input$show_trajectories & input$trajectory_type != "raw") {
             labels_df <- summarized_trajectories_df %>%
-                filter(percent == min(percent))
+                filter(prop_time == min(prop_time))
         } else{
             labels_df <- midpoint_df %>%
                 group_by(phoneme, allophone) %>%

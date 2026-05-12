@@ -1,43 +1,62 @@
 
 
 # This is the first processing once a raw DARLA file comes in.
-clean_darla_columns <- function(.df) {
+prep_darla_data <- function(.df) {
     .df |> 
+        
+        # Get the columns I want with the names I want in the order I want
         clean_names() |> 
-        select(speaker_id = name, everything(),
-               -matches("lobanov"), -b1, -b2, -b3, -beg, -end, -matches("word_trans"), -matches("_word"), -n_formants) |>
-        rename_with(ucfirst, matches("f\\d")) |>
-        rename(phoneme = vowel) |>
+        rowid_to_column("vowel_id") |> 
+        select(speaker_id = name, word, 
+               token_id = vowel_id, pre_seg, fol_seg, stress, phoneme = vowel, time = t, duration = dur, 
+               matches("F[12]_\\d")) |> 
+        
+        # Fix transcriptions
+        mutate(phoneme = arpa_to_wells(phoneme)) |> 
+        
+        # light processing
         mutate(word = tolower(word)) |>
-        rowid_to_column("vowel_id")
+        rename_with(str_to_title, matches("f\\d")) |> 
+        manually_reclassify_some_words() |> 
+        
+        
+        # Reshape
+        pivot_longer(cols = matches("_percent"), 
+                     names_to = c(".value", "prop_time"), 
+                     names_pattern = "(F\\d)_(\\d\\d)") |> 
+        mutate(prop_time = as.numeric(prop_time),
+               prop_time = prop_time / 100) |> 
+        filter(!is.na(F1), 
+               !is.na(F2))
+
 }
 
-
-
-
+prep_newfave_data <- function(.df) {
+    .df |> 
+        # Get the columns I want with the names I want in the order I want
+        clean_names() |> 
+        select(speaker_id = file_name, word,
+               token_id = id, pre_seg, fol_seg, stress, label, time, duration = dur, prop_time, F1 = f1, F2 = f2, F3 = f3) |>
+        
+        # Fix transcriptions
+        fave_to_wells() |> 
+        select(-label) |> 
+        
+        # light processing
+        mutate(word = tolower(word),
+               across(c(time, duration, F1:F3, prop_time), ~round(., 4))) |> 
+        manually_reclassify_some_words()
+}
 
 
 
 manually_reclassify_some_words <- function(.df) {
-    .df |> 
-        mutate(phoneme = 
+    .df |>
+        mutate(phoneme =
                    case_when(
-            word %in% c("was", "gonna", "because", "wanna") ~ "AH",
-            word %in% c("twenty") ~ "AH",
+            word %in% c("was", "gonna", "because", "wanna") ~ "STRUT",
+            word %in% c("twenty") ~ "STRUT",
             TRUE ~ phoneme))
-}
-
-# Reshape the trajectories. This is still part of the pre-OoO data processing.
-reshape_trajectories <- function(.df) {
-    .df |> 
-        select(-F1, -F2, -F3) |> 
-        pivot_longer(cols = matches("_percent"), 
-                     names_to = c(".value", "percent"), 
-                     names_pattern = "(F\\d)_(\\d\\d)") |> 
-        mutate(percent = as.numeric(percent)) |> 
-        filter(!is.na(F1), 
-               !is.na(F2))
-    
 }
 
 
@@ -45,7 +64,6 @@ reshape_trajectories <- function(.df) {
 
 ooo1_code_allophones <- function(.df) {
     .df |> 
-        mutate(phoneme = arpa_to_wells(phoneme)) %>%
         code_allophones(phoneme, .fol_seg = fol_seg, .pre_seg = pre_seg)
 }
 
