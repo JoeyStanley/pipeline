@@ -12,7 +12,6 @@ function(input, output, session) {
                      value = 0,
                      {
                          
-                         
                          incProgress(1/7, detail = "Reading file…")
                          # Get the data path. If uploaded, then pull from there. If sample, then pull from local data.
                          path_to_data <- if(input$data_source == "sample") {

@@ -32,7 +32,7 @@ fluidPage(
                                              ".csv")),
                         p("This should be the file originally called \"formants.csv\" that",
                           tags$a("DARLA", href = "http://darla.dartmouth.edu", target = "_blank"),
-                          "emailed to you. (The file you uupload can be named whatever you want.)")
+                          "emailed to you. (The file you upload can be named whatever you want.)")
                     ),
                     
                     conditionalPanel(
