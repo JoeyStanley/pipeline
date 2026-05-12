@@ -270,12 +270,10 @@ function(input, output, session) {
         group_means <- pillai_df() %>%
             group_by(allophone) %>%
             summarize(across(c(F1, F2), mean), .groups = "drop_last")
-
+        
         # Elsewhere allophones, for the hull
-        vowel_space <- midpoints_df() %>%
-            filter(allophone %in% c("BEET", "BIT", "BAIT", "BET", "BAT", "BOT", "BOUGHT", "BOAT", "PUT", "BOOT")) %>%
-            group_by(allophone) %>%
-            summarize(across(c(F1, F2), mean), .groups = "drop_last")
+        vowel_space <- vowel_space_df_for_hull()
+        
         # Reference points
         reference_points <- vowel_space %>%
             filter(allophone %in% c("BEET", "BOAT", "BOT", "BAT"))
@@ -324,8 +322,8 @@ function(input, output, session) {
             round(3) %>%
             cat()
     })
-    output$pillai_score_message <- renderPrint({
-        cat("Here is the Pillai score. Values range from 0 (=complete overlap) to 1 (complete separation).")
+    output$pillai_score_message <- renderText({
+        "Here is the Pillai score. Values range from 0 (=complete overlap) to 1 (complete separation)."
     })
     output$pillai_p <- renderPrint({
         p <- pillai_df() %>%
@@ -333,7 +331,7 @@ function(input, output, session) {
             pull()
         cat(ifelse(p < 0.001, "< 0.001", round(p, 3)))
     })
-    output$pillai_p_message <- renderPrint({
-        cat("Here is the p-value. If it's less than 0.05, it means the difference between the two vowels is statistically significant.")
+    output$pillai_p_message <- renderText({
+        "Here is the p-value. If it's less than 0.05, it means the difference between the two vowels is statistically significant."
     })
 }
