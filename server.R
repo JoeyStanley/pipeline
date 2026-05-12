@@ -115,17 +115,17 @@ function(input, output, session) {
     )
 
     ## Update UI ----
-    observe({
-        list_of_speakers <- full_df() %>%
-            pull(speaker_id) %>%
-            unique()
-
-        updateSelectInput(session, "speaker_selection",
-                          choices = list_of_speakers,
-                          selected = head(list_of_speakers, 1)
-        )
+    
+    # Make it clear that list of speakers should update when "process" button is clicked and not necessarily when full_df() updates. 
+    observeEvent(input$process_uploaded_button, {
+            list_of_speakers <- full_df() %>%
+                pull(speaker_id) %>%
+                unique()
+            updateSelectInput(session, "speaker_selection",
+                              choices = list_of_speakers,
+                              selected = head(list_of_speakers, 1)
+            )
     })
-
 
     ## Download image ----
 
