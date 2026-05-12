@@ -252,7 +252,7 @@ function(input, output, session) {
         }
         if (input$show_trajectories) {
             p <- p + geom_path(data = summarized_trajectories_df, 
-                               aes(group = quote(plotting_group), color = .data[[input$color_variable]]),
+                               aes(group = plotting_group, color = .data[[input$color_variable]]),
                                arrow = joey_arrow(), alpha = input$trajectories_alpha, linewidth = input$trajectories_size)
         }
         # if (!is.na(input$trajectory_label_location)) {
@@ -337,8 +337,6 @@ function(input, output, session) {
         if (input$pillai_vowel_space) {
             p <- p + geom_mark_hull(data = vowel_space, aes(group = 1), color = "gray20")
         }
-
-
 
         p +
             geom_text(aes(label = word)) +
