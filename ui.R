@@ -314,7 +314,7 @@ fluidPage(
                                 column(6,
                                        textInput("fig_filename",
                                                  label = h4("File name"),
-                                                 value = "L580R_plot"),
+                                                 value = "vowel_plot"),
                                        selectInput("fig_filetype",
                                                    label = h4("File type"),
                                                    choices = c("JPEG", "PNG", "PDF"),
