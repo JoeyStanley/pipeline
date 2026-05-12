@@ -1,4 +1,5 @@
 
+
 # This is the first processing once a raw DARLA file comes in.
 clean_darla_columns <- function(.df) {
     .df |> 
@@ -47,7 +48,7 @@ ooo1_code_allophones <- function(.df) {
 
 ooo2_remove_outliers <- function(.df) {
     .df |> 
-        mutate(is_stopword = word %in% c(stopwords::stopwords(source = "marimo"), 
+        mutate(is_stopword = word %in% c(stopwords(source = "marimo"),
                                          "was", "gonna", "because", "wanna", "got", "mh", "kinda")) |> 
         mutate(outlier_group = case_when(is_stopword ~ "stopword",
                                          stress == 0 ~ "unstressed",
@@ -56,7 +57,7 @@ ooo2_remove_outliers <- function(.df) {
 }
 
 
-
+# TODO: Normalize
 ooo3_normalize <- function(.df) {
     #|> 
     # group_by(speaker_id, phoneme) %>%
