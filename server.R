@@ -4,19 +4,24 @@ options(shiny.maxRequestSize=50*1024^2)
 
 function(input, output, session) {
     
-    # Loading sample data wasn't working. But that code would go here.
-
-
+    
     ## Get data (and subsets) ----
     full_df <- eventReactive(input$process_uploaded_button, {
         withProgress(message = "Processing data…",
                      detail = "This may take a few seconds.",
                      value = 0,
                      {
-                         req(input$uploaded_data)
+                         
                          
                          incProgress(1/7, detail = "Reading file…")
-                         raw <- read_csv(input$uploaded_data$datapath, show_col_types = FALSE)
+                         # Get the data path. If uploaded, then pull from there. If sample, then pull from local data.
+                         path_to_data <- if(input$data_source == "sample") {
+                             "data/joey_darla.csv"
+                         } else {
+                             req(input$uploaded_data)
+                             input$uploaded_data$datapath
+                         }
+                         raw <- read_csv(path_to_data, show_col_types = FALSE)
                          
                          incProgress(1/7, detail = "Cleaning columns…")
                          cleaned <- clean_darla_columns(raw)
