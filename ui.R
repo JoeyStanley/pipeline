@@ -55,20 +55,31 @@ fluidPage(
                           tags$a("joeysvowels", href = "https://joeystanley.github.io/joeysvowels/", target = "_blank"),
                           "package on Github.")
                     ),
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    # TODO: Load sample data
-                    #actionButton(width = "49%", "load_sample_button", "Use sample data instead"),
                     hr(),
+                    
+                    
+                    
+                    
+                    
+    
+                   
                     h3("Process"),
                     actionButton(width = "100%", "process_uploaded_button", "Process my data"),
                     p("You'll know the data loaded correctly when a table appears on the right."),
                     hr(),
+                    
+                    
+                    h3("Manage datasets"),
+                    fluidRow(
+                        column(width = 6, uiOutput("loaded_datasets_list")),
+                        column(
+                            width = 6,
+                            br(), 
+                            actionButton("remove_data_button", "Remove selected", width = "100%")
+                        )
+                    ),
+                    hr(),
+                    
                     h3("Download"),
                     p("Click the button below to download this processed version of the data. It is your same data but it has been cleaned and gone through a pipeline of processing steps already."),
                     downloadButton("export_processed", "Export this processed data", width = "30%"),

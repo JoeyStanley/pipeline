@@ -7,7 +7,7 @@ prep_darla_data <- function(.df) {
         # Get the columns I want with the names I want in the order I want
         clean_names() |> 
         rowid_to_column("vowel_id") |> 
-        select(speaker_id = name, word, 
+        select(source_file, speaker_id = name, word, 
                token_id = vowel_id, pre_seg, fol_seg, stress, phoneme = vowel, time = t, duration = dur, 
                matches("F[12]_\\d")) |> 
         
@@ -15,7 +15,8 @@ prep_darla_data <- function(.df) {
         mutate(phoneme = arpa_to_wells(phoneme)) |> 
         
         # light processing
-        mutate(word = tolower(word)) |>
+        mutate(word = tolower(word),
+               token_id = as.character(token_id)) |>
         rename_with(str_to_title, matches("f\\d")) |> 
         manually_reclassify_some_words() |> 
         
@@ -35,7 +36,7 @@ prep_newfave_data <- function(.df) {
     .df |> 
         # Get the columns I want with the names I want in the order I want
         clean_names() |> 
-        select(speaker_id = file_name, word,
+        select(source_file, speaker_id = file_name, word,
                token_id = id, pre_seg, fol_seg, stress, label, time, duration = dur, prop_time, F1 = f1, F2 = f2, F3 = f3) |>
         
         # Fix transcriptions

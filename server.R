@@ -6,11 +6,18 @@ function(input, output, session) {
     
     
     ## Get data (and subsets) ----
-    full_df <- eventReactive(input$process_uploaded_button, {
+    
+    full_df        <- reactiveVal(NULL)
+    loaded_files   <- reactiveVal(character(0))  # tracks file names for the UI list
+    selected_files <- reactiveVal(character(0))  # tracks which are checked for removal
+    
+    # Loading data (first or subsequent)
+    observeEvent(input$process_uploaded_button, {
         withProgress(message = "Processing data…",
                      detail = "This may take a few seconds.",
                      value = 0,
                      {
+                         req(input$uploaded_data)
                          
                          incProgress(1/6, detail = "Reading file…")
                          # Get the data path. If uploaded, then pull from there. If sample, then pull from local data.
@@ -20,7 +27,9 @@ function(input, output, session) {
                              req(input$uploaded_data)
                              input$uploaded_data$datapath
                          }
-                         raw <- read_csv(path_to_data, show_col_types = FALSE)
+                         raw <- read_csv(path_to_data, show_col_types = FALSE) |> 
+                             # keep source file to allow for removing later on
+                             mutate(source_file = input$uploaded_data$name) 
                          
                          # Prep data according to data source.
                          incProgress(1/6, detail = "Prepping data…")
@@ -33,7 +42,7 @@ function(input, output, session) {
                          incProgress(1/6, message = "Applying Order of Operations", detail = "Step 1: Coding allophones…")
                          ooo1 <- ooo1_code_allophones(cleaned)
                          
-                         incProgress(1/6, detail = "Step 2: Removing outliers… (Note: this is the longest step)")
+                         incProgress(1/6, detail = "Step 2: Removing outliers… (Note: this is the most time consuming step)")
                          ooo2 <- ooo2_remove_outliers(ooo1)
                          
                          incProgress(1/6, detail = "Step 3: Normalizing…")
@@ -41,10 +50,57 @@ function(input, output, session) {
                          
                          incProgress(1/6, detail = "Step 4: Filtering…")
                          ooo4 <- ooo4_filter_otherwise_good_data(ooo3)
-                         return(ooo4)
                          
+                         # Here's where this is saved into the main datasets
+                         if (is.null(full_df())) {
+                             full_df(ooo4)
+                         } else {
+                             full_df(bind_rows(full_df(), ooo4))
+                         }
+                         loaded_files(c(loaded_files(), input$uploaded_data$name))
                      })
     })
+    
+    # Update button label dynamically
+    observe({
+        label <- if (is.null(full_df())) "Process my data" else "Process and add to existing data"
+        updateActionButton(session, "process_uploaded_button", label = label)
+    })
+    
+    # Remove selected datasets
+    observeEvent(input$remove_data_button, {
+        to_remove <- selected_files()
+        req(length(to_remove) > 0)
+        
+        remaining <- setdiff(loaded_files(), to_remove)
+        loaded_files(remaining)
+        selected_files(character(0))
+        
+        # Re-filter the data to only keep rows from remaining files
+        full_df(full_df() %>% filter(source_file %in% remaining))
+    })
+    
+    
+    # Render the dynamic checklist of loaded files
+    output$loaded_datasets_list <- renderUI({
+        files <- loaded_files()
+        if (length(files) == 0) {
+            p("No datasets loaded yet.", style = "color: gray;")
+        } else {
+            checkboxGroupInput("selected_for_removal",
+                               label = NULL,
+                               choices = files,
+                               selected = NULL)
+        }
+    })
+    
+    # Keep selected_files in sync with the checkboxes
+    observe({
+        selected_files(input$selected_for_removal %||% character(0))
+    })
+    
+    
+    
 
     # Create just a midpoints df.
     midpoints_df <- reactive({ 
