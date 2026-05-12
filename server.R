@@ -24,60 +24,6 @@ library(joeyr)
 # Increase max upload size from 5MG to 50MB: https://stackoverflow.com/questions/18037737/how-to-change-maximum-upload-size-exceeded-restriction-in-shiny-and-save-user
 options(shiny.maxRequestSize=50*1024^2)
 
-## Process data ----
-process_data <- function(df) {
-    df %>%
-        clean_names() %>%
-        select(speaker_id = name, everything(),
-               -matches("lobanov"), -b1, -b2, -b3, -beg, -end, -matches("word_trans"), -matches("_word"), -n_formants) %>%
-        rename_with(ucfirst, matches("f\\d")) %>%
-        rename(phoneme = vowel) %>%
-        mutate(word = tolower(word)) %>%
-        rowid_to_column("vowel_id") %>%
-        # Reclassify
-        mutate(phoneme = case_when(word %in% c("was", "gonna", "because", "wanna") ~ "AH",
-                                   word %in% c("twenty") ~ "AH",
-                                   TRUE ~ phoneme)) %>%
-        
-        # Reshape 
-        select(-F1, -F2, -F3) %>%
-        pivot_longer(cols = matches("_percent"), 
-                     names_to = c(".value", "percent"), 
-                     names_pattern = "(F\\d)_(\\d\\d)") %>%
-        mutate(percent = as.numeric(percent)) %>%
-        filter(!is.na(F1), !is.na(F2)) %>%
-        
-        # OoO1 Allophones
-        mutate(phoneme = arpa_to_wells(phoneme)) %>%
-        code_allophones(phoneme, .fol_seg = fol_seg, .pre_seg = pre_seg) %>%
-        
-        # OoO2 Outliers
-        mutate(is_stopword = word %in% c(stopwords::stopwords(source = "marimo"), 
-                                         "was", "gonna", "because", "wanna", "got", "mh", "kinda")) %>%
-        mutate(outlier_group = case_when(is_stopword ~ "stopword",
-                                         stress == 0 ~ "unstressed",
-                                         TRUE ~ allophone)) %>%
-        group_by(speaker_id, outlier_group) %>%
-        filter(!find_outliers(F1, F2)) %>%
-        ungroup() %>%
-        
-        # OoO3 Normalization
-        # group_by(speaker_id, phoneme) %>%
-        # mutate(across(.cols = c(F1, F2),
-        #               .fns = c(`z` = scale, `log` = log10),
-        #               .names = "{.col}_{.fn}")) %>%
-        # ungroup() %>%
-        # norm_logmeans(c(F1_log, F2_log),
-        #               .speaker_col = speaker_id,
-        #               .vowel_col = phoneme) %>%
-        
-        # OoO4 Remove other data?
-        filter(stress == 1,
-               !is_stopword) %>%
-        # print() %>%
-        return()
-}
-
 function(input, output, session) {
     
     # Loading sample data wasn't working. But that code would go here.
@@ -85,13 +31,74 @@ function(input, output, session) {
 
     ## Get data (and subsets) ----
     full_df <- eventReactive(input$process_uploaded_button, {
-        withProgress(message = "Processing…",
+        withProgress(message = "Processing data…",
                      detail = "This may take a few seconds.",
-                     value =- 0,
+                     value = 0,
                      {
                          req(input$uploaded_data)
-                         read_csv(input$uploaded_data$datapath, show_col_types = FALSE) %>%
-                             process_data()
+                         
+                         incProgress(1/7, detail = "Reading file…")
+                         raw_df <- read_csv(input$uploaded_data$datapath, show_col_types = FALSE)
+                         
+                         incProgress(1/7, detail = "Cleaning columns…")
+                         cleaned <- raw_df |> 
+                             clean_names() |> 
+                             select(speaker_id = name, everything(),
+                                    -matches("lobanov"), -b1, -b2, -b3, -beg, -end, -matches("word_trans"), -matches("_word"), -n_formants) |> 
+                             rename_with(ucfirst, matches("f\\d")) |> 
+                             rename(phoneme = vowel) |> 
+                             mutate(word = tolower(word)) |> 
+                             rowid_to_column("vowel_id") |> 
+                             # Reclassify
+                             mutate(phoneme = case_when(word %in% c("was", "gonna", "because", "wanna") ~ "AH",
+                                                        word %in% c("twenty") ~ "AH",
+                                                        TRUE ~ phoneme))
+                         
+                         incProgress(1/7, detail = "Reshaping trajectories…")
+                         reshaped <- cleaned |> 
+                             select(-F1, -F2, -F3) |> 
+                             pivot_longer(cols = matches("_percent"), 
+                                          names_to = c(".value", "percent"), 
+                                          names_pattern = "(F\\d)_(\\d\\d)") |> 
+                             mutate(percent = as.numeric(percent)) |> 
+                             filter(!is.na(F1), !is.na(F2))
+                         
+                         incProgress(1/7, message = "Applying Order of Operations", detail = "1: Coding allophones…")
+                         ooo1 <- reshaped |> 
+                             mutate(phoneme = arpa_to_wells(phoneme)) %>%
+                             code_allophones(phoneme, .fol_seg = fol_seg, .pre_seg = pre_seg)
+                         
+                         incProgress(1/7, detail = "2: Removing outliers…")
+                         ooo2 <- ooo1 |> 
+                             mutate(is_stopword = word %in% c(stopwords::stopwords(source = "marimo"), 
+                                                              "was", "gonna", "because", "wanna", "got", "mh", "kinda")) %>%
+                             mutate(outlier_group = case_when(is_stopword ~ "stopword",
+                                                              stress == 0 ~ "unstressed",
+                                                              TRUE ~ allophone)) %>%
+                             group_by(speaker_id, outlier_group) %>%
+                             filter(!find_outliers(F1, F2)) %>%
+                             ungroup()
+                         
+                         incProgress(1/7, detail = "3: Normalizing…")
+                         ooo3 <- ooo2 
+                         #|> 
+                             # group_by(speaker_id, phoneme) %>%
+                             # mutate(across(.cols = c(F1, F2),
+                             #               .fns = c(`z` = scale, `log` = log10),
+                             #               .names = "{.col}_{.fn}")) %>%
+                             # ungroup() %>%
+                             # norm_logmeans(c(F1_log, F2_log),
+                             #               .speaker_col = speaker_id,
+                             #               .vowel_col = phoneme)
+                             
+                         
+                         incProgress(1/7, detail = "4: Filtering…")
+                         ooo4 <- ooo3 |> 
+                             filter(stress == 1,
+                                !is_stopword)
+                         
+                         return(ooo4)
+                         
                      })
     })
 
