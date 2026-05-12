@@ -120,35 +120,6 @@ function(input, output, session) {
         }
     )
 
-    output$export_for_vv <- downloadHandler(
-        filename = function() { "formants_forVisibleVowels.xlsx" },
-        content = function(file) {
-            vv <- full_df() %>%
-                filter(!phoneme == "NURSE") %>%
-                select(`speaker` = speaker_id, `vowel` = phoneme, vowel_id, percent, `duration` = dur, `time` = t, F1, F2) %>%
-
-                # Give specific extraction times
-                mutate(time = time + percent*duration/100, .after = time) %>%
-
-                # Convert percent to bins
-                rename(location = percent) %>%
-
-                # Add required columns
-                mutate(f0 = NA, F3 = NA) %>%
-                relocate(time, f0, .before = F1) %>%
-
-                # Pivot wider (I couldn't get the long format to work)
-                pivot_wider(names_from = location, values_from = time:F3) %>%
-                select(speaker, vowel, vowel_id, duration, matches("20"), matches("35"), matches("50"), matches("65"), matches("80"))
-
-            # Switch to base R because Visible Vowels wants non-unique column names
-            names(vv) <- str_remove_all(names(vv), "%?_\\d+")
-
-            # Export
-            writexl::write_xlsx(x = vv, path = file)
-        }
-    )
-
     ## Update UI ----
     observe({
         list_of_speakers <- full_df() %>%

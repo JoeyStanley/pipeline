@@ -25,7 +25,7 @@ library(shiny)
 fluidPage(
     
     # Application title
-    titlePanel("Joey's Handy-Dandy Tool for Visualizing DARLA data"),
+    titlePanel("Pipeline"),
     
     tabsetPanel(
         type = "pills",
@@ -53,9 +53,6 @@ fluidPage(
                     h3("Download"),
                     p("Click the button below to download this processed version of the data. It is your same data but it has been cleaned and gone through a pipeline of processing steps already."),
                     downloadButton("export_processed", "Export this processed data", width = "30%"),
-                    hr(),
-                    p("If you would like to upload your data to VisibleVowels.org, your data has to be processed in a very specific way. Click the button below to get a compatible version of your data that can be read into that tool."),
-                    downloadButton("export_for_vv", "Export for VisibleVowels.org", width = "30%")
                 ),
                 mainPanel(
                     DT::dataTableOutput("show_all_data")
