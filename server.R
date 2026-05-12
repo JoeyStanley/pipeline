@@ -95,16 +95,10 @@ function(input, output, session) {
                      })
     })
 
-    midpoints_df <- eventReactive(input$process_uploaded_button, {
-        req(input$uploaded_data)
-        full_df() %>%
-            filter(percent == 50)
-    })
-
-    trajectories_df <- eventReactive(input$process_uploaded_button, {
-        req(input$uploaded_data)
-        full_df()
-    })
+    # Create just a midpoints df.
+    midpoints_df <- reactive({ full_df() |> filter(percent == 50) })
+    # Create a trajectory df. Same as full, but here for clarity.
+    trajectories_df <- reactive({ full_df() })
 
     ## Show all data ----
     output$show_all_data <- DT::renderDataTable(DT::datatable({
