@@ -18,3 +18,4 @@ library(itsadug)
 # Linguistics-specific
 library(stopwords)
 library(joeyr)
+library(tidynorm)

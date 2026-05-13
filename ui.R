@@ -84,7 +84,7 @@ fluidPage(
                     
                     h3("Download"),
                     p("Click the button below to download this processed version of the data. It is your same data but it has been cleaned and gone through a pipeline of processing steps already."),
-                    downloadButton("export_processed", "Export this processed data", width = "30%"),
+                    downloadButton("export_processed", "Export this processed data", width = "30%")
                 ),
                 mainPanel(
                     DT::dataTableOutput("show_all_data")
@@ -140,6 +140,25 @@ fluidPage(
                         ),
                         
                         # Tab for words will go here eventually. (See GSV for how to do that.)
+                        
+                        
+                        ### Processing ----
+                        tabPanel(
+                            title = "Processing",
+                            fluidRow(
+                                column(12,
+                                       radioButtons("norm_method", "Normalization method",
+                                                    choices = list("none" = "n",
+                                                                   "Nearey" = "lm",
+                                                                   "Watt & Fabricius" = "wf",
+                                                                   "ΔF" = "df",
+                                                                   "Lobanov" = "z"),
+                                                    selected = "n",
+                                                    inline = FALSE,
+                                                    width = '100%')
+                                       )
+                            )
+                        ),
                         
                         ### Plot elements ----
                         tabPanel(

@@ -81,22 +81,15 @@ ooo2_remove_outliers <- function(.df) {
 }
 
 
-# TODO: Normalize
-ooo3_normalize <- function(.df) {
-    #|> 
-    # group_by(speaker_id, phoneme) %>%
-    # mutate(across(.cols = c(F1, F2),
-    #               .fns = c(`z` = scale, `log` = log10),
-    #               .names = "{.col}_{.fn}")) %>%
-    # ungroup() %>%
-    # norm_logmeans(c(F1_log, F2_log),
-    #               .speaker_col = speaker_id,
-    #               .vowel_col = phoneme)
-    .df
-}
+
+
 
 ooo4_filter_otherwise_good_data <- function(.df) {
     .df |> 
         filter(stress == 1,
                !is_stopword)
 }
+
+
+
+

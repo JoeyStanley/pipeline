@@ -6,7 +6,8 @@ function(input, output, session) {
     
     ## Add and remove data ----
     
-    full_df        <- reactiveVal(NULL)
+    full_df <- reactiveVal(NULL)
+    
     loaded_files   <- reactiveVal(character(0))  # tracks file names for the UI list
     selected_files <- reactiveVal(character(0))  # tracks which are checked for removal
     
@@ -18,7 +19,7 @@ function(input, output, session) {
                      {
                          req(input$uploaded_data)
                          
-                         incProgress(1/6, detail = "Reading file…")
+                         incProgress(1/4, detail = "Reading file…")
                          # Get the data path. If uploaded, then pull from there. If sample, then pull from local data.
                          path_to_data <- if(input$data_source == "sample") {
                              "data/joey_darla.csv"
@@ -31,30 +32,30 @@ function(input, output, session) {
                              mutate(source_file = input$uploaded_data$name) 
                          
                          # Prep data according to data source.
-                         incProgress(1/6, detail = "Prepping data…")
+                         incProgress(1/4, detail = "Prepping data…")
                          cleaned <- if (input$data_source == "new-fave") {
                              prep_newfave_data(raw)
                          } else {
                              prep_darla_data(raw)
                          }
                          
-                         incProgress(1/6, message = "Applying Order of Operations", detail = "Step 1: Coding allophones…")
+                         incProgress(1/4, message = "Applying Order of Operations", detail = "Step 1: Coding allophones…")
                          ooo1 <- ooo1_code_allophones(cleaned)
                          
-                         incProgress(1/6, detail = "Step 2: Removing outliers… (Note: this is the most time consuming step)")
+                         incProgress(1/4, detail = "Step 2: Removing outliers… (Note: this is the most time consuming step)")
                          ooo2 <- ooo2_remove_outliers(ooo1)
                          
-                         incProgress(1/6, detail = "Step 3: Normalizing…")
-                         ooo3 <- ooo3_normalize(ooo2)
-                         
-                         incProgress(1/6, detail = "Step 4: Filtering…")
-                         ooo4 <- ooo4_filter_otherwise_good_data(ooo3)
+                         # incProgress(1/6, detail = "Step 3: Normalizing…")
+                         # ooo3 <- ooo3_normalize(ooo2)
+                         # 
+                         # incProgress(1/6, detail = "Step 4: Filtering…")
+                         # ooo4 <- ooo4_filter_otherwise_good_data(ooo3)
                          
                          # Here's where this is saved into the main datasets
                          if (is.null(full_df())) {
-                             full_df(ooo4)
+                             full_df(ooo2)
                          } else {
-                             full_df(bind_rows(full_df(), ooo4))
+                             full_df(bind_rows(full_df(), ooo2))
                          }
                          loaded_files(c(loaded_files(), input$uploaded_data$name))
                      })
@@ -100,17 +101,45 @@ function(input, output, session) {
     
     
     ### Get subsets----
-
+    
+    #### Normalize ----
+    # Because it's a reactive thing, I'll put it here. 
+    
+    observe({
+        req(full_df())
+        
+        # Get the normalization methods from the list saved in procesing.R.
+        info <- norm_methods[[input$norm_method]]
+        # If this method has been done, this is the name of the column that already exists.
+        col_to_check <- paste0("F1", info$suffix)
+        
+        # Only run normalization if we haven't done it before
+        if (!hasName(full_df(), col_to_check)) {
+            withProgress(message = "Applying Order of Operations", detail = "Step 3: Normalizing…", {
+                full_df(info$fn(full_df()))
+            })
+        }
+        
+        # Create a copy of this new column and call it "norm" for ease of subsequent processing.
+        full_df(full_df() |>
+                    mutate(F1_norm = .data[[paste0("F1", info$suffix)]],
+                           F2_norm = .data[[paste0("F2", info$suffix)]]))
+    })
+    
     # Create just a midpoints df.
     midpoints_df <- reactive({ 
+        req(full_df())
+        
         full_df() |> 
+            ooo4_filter_otherwise_good_data() |>
             filter(prop_time > 0.4,
-                   prop_time < 0.6) |> 
-            summarize(F1 = mean(F1),
-                      F2 = mean(F2), .by = -c(prop_time, time, matches("F\\d")))
+                   prop_time < 0.6) |>
+            summarize(across(matches("F[1234]"), mean, na.rm = TRUE),
+              .by = -c(prop_time, time, matches("F\\d")))
     })
-    # Create a trajectory df. Same as full, but here for clarity.
-    trajectories_df <- reactive({ full_df() })
+    
+    # Create a trajectory df. Same as the normed df, but here for clarity.
+    trajectories_df <- reactive({ full_df() |>  ooo4_filter_otherwise_good_data() })
     
     
     ### Show all data ----
@@ -180,11 +209,11 @@ function(input, output, session) {
     })
     vowel_space_df_for_hull <- reactive({
         req(midpoints_df())
-        midpoints_df() %>%
+        midpoints_df() |> 
             filter(speaker_id %in% input$speaker_selection,
                    allophone %in% c("BEET", "BIT", "BAIT", "BET", "BAT", "BOT", "BOUGHT", "BOAT", "PUT", "BOOT")) %>%
             group_by(speaker_id, allophone) %>%
-            summarize(across(c(F1, F2), mean), .groups = "drop_last")
+            summarize(across(matches("F[1234]_norm"), mean, na.rm = TRUE), .groups = "drop_last")
     })
 
     # A function for generating the plot.
@@ -202,16 +231,16 @@ function(input, output, session) {
         if (input$trajectory_type == "mean") {
             summarized_trajectories_df <- trajectories_df %>%
                 group_by(phoneme, allophone, prop_time) %>%
-                summarize(across(c(F1, F2), .fns = mean), .groups = "drop_last") %>%
+                summarize(across(matches("F[1234]"), .fns = mean), .groups = "drop_last") %>%
                 mutate(plotting_group = allophone)
         } else if (input$trajectory_type == "median") {
             summarized_trajectories_df <- trajectories_df %>%
                 group_by(phoneme, allophone, prop_time) %>%
-                summarize(across(c(F1, F2), .fns = median), .groups = "drop_last") %>%
+                summarize(across(matches("F[1234]"), .fns = median), .groups = "drop_last") %>%
                 mutate(plotting_group = allophone)
         } else if (input$trajectory_type == "smoothed") {
             summarized_trajectories_df <- trajectories_df %>%
-                pivot_longer(cols = c(F1, F2), names_to = "formant", values_to = "hz") %>%
+                pivot_longer(cols = matches("F[1234]"), names_to = "formant", values_to = "hz") %>%
                 group_by(phoneme, allophone, formant) %>%
                 nest() %>%
                 mutate(mdl = map(data, ~gam(hz ~ prop_time + s(prop_time, k = 4), data = .)),
@@ -228,12 +257,12 @@ function(input, output, session) {
 
         # Labels (mean for points, onset for trajectories)
         if (input$show_trajectories & input$trajectory_type != "raw") {
-            labels_df <- summarized_trajectories_df %>%
+            labels_df <- summarized_trajectories_df |> 
                 filter(prop_time == min(prop_time))
         } else{
             labels_df <- midpoint_df %>%
                 group_by(phoneme, allophone) %>%
-                summarize(across(matches("F\\d"), mean), .groups = "drop_last")
+                summarize(across(matches("F\\d_norm"), mean, na.rm = TRUE), .groups = "drop_last")
         }
 
         # Reference points
@@ -242,7 +271,7 @@ function(input, output, session) {
                    allophone %in% c("BEET", "BOAT", "BOT", "BAT"))
 
         ### Basic elements ----
-        p <- ggplot(midpoint_df, aes(F2, F1))
+        p <- ggplot(midpoint_df, aes(F2_norm, F1_norm))
 
         ### Optional elements ----
         if (input$main_reference_points) {
@@ -326,8 +355,8 @@ function(input, output, session) {
 
                                             input$vowel_pair == "cot-caught"     ~ c("BOT",  "BOUGHT"),
                                             input$vowel_pair == "goose-fronting" ~ c("TOOT", "BOOT")),
-                   !is.na(F1),
-                   !is.na(F2))
+                   !is.na(F1_norm),
+                   !is.na(F2_norm))
     })
     ### Pillai data summary table ----
     output$pillai_pairs_summary <- renderTable({
@@ -338,7 +367,7 @@ function(input, output, session) {
     output$vowel_pair_plot <- renderPlot({
         group_means <- pillai_df() %>%
             group_by(allophone) %>%
-            summarize(across(c(F1, F2), mean), .groups = "drop_last")
+            summarize(across(matches("F[1234]"), mean), .groups = "drop_last")
         
         # Elsewhere allophones, for the hull
         vowel_space <- vowel_space_df_for_hull()
@@ -348,7 +377,7 @@ function(input, output, session) {
             filter(allophone %in% c("BEET", "BOAT", "BOT", "BAT"))
 
         # Basic plot
-        p <- ggplot(pillai_df(), aes(F2, F1, color = allophone))
+        p <- ggplot(pillai_df(), aes(F2_norm, F1_norm, color = allophone))
 
         if (input$pillai_reference_points) {
             p <- p + geom_text(data = reference_points, aes(label = allophone), color = "gray20", size = 10)
