@@ -7,7 +7,6 @@ function(input, output, session) {
     ## Add and remove data ----
     
     full_df <- reactiveVal(NULL)
-    
     loaded_files   <- reactiveVal(character(0))  # tracks file names for the UI list
     selected_files <- reactiveVal(character(0))  # tracks which are checked for removal
     
@@ -17,19 +16,20 @@ function(input, output, session) {
                      detail = "This may take a few seconds.",
                      value = 0,
                      {
-                         req(input$uploaded_data)
-                         
                          incProgress(1/4, detail = "Reading file…")
                          # Get the data path. If uploaded, then pull from there. If sample, then pull from local data.
-                         path_to_data <- if(input$data_source == "sample") {
-                             "data/joey_darla.csv"
+                         if (input$data_source == "sample") {
+                             path_to_data <- "data/joey_darla.csv"
+                             this_file_name    <- "joey_darla.csv"
                          } else {
                              req(input$uploaded_data)
-                             input$uploaded_data$datapath
+                             path_to_data <- input$uploaded_data$datapath
+                             this_file_name    <- input$uploaded_data$name
                          }
+                         
                          raw <- read_csv(path_to_data, show_col_types = FALSE) |> 
                              # keep source file to allow for removing later on
-                             mutate(source_file = input$uploaded_data$name) 
+                             mutate(source_file = this_file_name) 
                          
                          # Prep data according to data source.
                          incProgress(1/4, detail = "Prepping data…")
@@ -45,19 +45,18 @@ function(input, output, session) {
                          incProgress(1/4, detail = "Step 2: Removing outliers… (Note: this is the most time consuming step)")
                          ooo2 <- ooo2_remove_outliers(ooo1)
                          
-                         # incProgress(1/6, detail = "Step 3: Normalizing…")
-                         # ooo3 <- ooo3_normalize(ooo2)
-                         # 
-                         # incProgress(1/6, detail = "Step 4: Filtering…")
-                         # ooo4 <- ooo4_filter_otherwise_good_data(ooo3)
-                         
-                         # Here's where this is saved into the main datasets
+                         # Save/add to the new datasets
                          if (is.null(full_df())) {
                              full_df(ooo2)
                          } else {
                              full_df(bind_rows(full_df(), ooo2))
                          }
-                         loaded_files(c(loaded_files(), input$uploaded_data$name))
+                         loaded_files(c(loaded_files(), this_file_name))
+                         
+                         list_of_speakers <- full_df() |> pull(speaker_id) |> unique()
+                         updateSelectInput(session, "speaker_selection",
+                                           choices = list_of_speakers)
+                         
                      })
     })
     
@@ -67,17 +66,30 @@ function(input, output, session) {
         updateActionButton(session, "process_uploaded_button", label = label)
     })
     
+    
+    # Keep selected_files in sync with the checkboxes
+    observe({
+        selected_files(input$selected_for_removal %||% character(0))
+    })
+    
     # Remove selected datasets
     observeEvent(input$remove_data_button, {
+        
         to_remove <- selected_files()
         req(length(to_remove) > 0)
+        
+        message(paste("Here are the selected files I want to remove:", to_remove))
         
         remaining <- setdiff(loaded_files(), to_remove)
         loaded_files(remaining)
         selected_files(character(0))
         
+        message(paste("Here are the remaining files:", remaining))
+        
         # Re-filter the data to only keep rows from remaining files
-        full_df(full_df() %>% filter(source_file %in% remaining))
+        full_df(full_df() |> filter(source_file %in% remaining))
+        
+        
     })
     
     
@@ -92,11 +104,6 @@ function(input, output, session) {
                                choices = files,
                                selected = NULL)
         }
-    })
-    
-    # Keep selected_files in sync with the checkboxes
-    observe({
-        selected_files(input$selected_for_removal %||% character(0))
     })
     
     
@@ -155,19 +162,6 @@ function(input, output, session) {
             full_df() %>% write_csv(file = file)
         }
     )
-
-    ## Update other UI elements ----
-    
-    # Make it clear that list of speakers should update when "process" button is clicked and not necessarily when full_df() updates. 
-    observeEvent(input$process_uploaded_button, {
-            list_of_speakers <- full_df() %>%
-                pull(speaker_id) %>%
-                unique()
-            updateSelectInput(session, "speaker_selection",
-                              choices = list_of_speakers,
-                              selected = head(list_of_speakers, 1)
-            )
-    })
     
     
 
