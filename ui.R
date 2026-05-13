@@ -63,7 +63,7 @@ fluidPage(
                     ### Process ----    
                    
                     h3("Process"),
-                    actionButton(width = "100%", "process_uploaded_button", "Process my data"),
+                    actionButton(width = "100%", "process_uploaded_button", "Process data"),
                     p("You'll know the data loaded correctly when a table appears on the right."),
                     hr(),
                     
