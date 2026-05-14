@@ -8,7 +8,6 @@ function(input, output, session) {
     
     full_df <- reactiveVal(NULL)
     loaded_files   <- reactiveVal(character(0))  # tracks file names for the UI list
-    selected_files <- reactiveVal(character(0))  # tracks which are checked for removal
     
     # Keep track of which normalizations have been done on this dataset. (Updates when dataset changes.)
     completed_normalizations <- reactiveVal(character(0))
@@ -26,8 +25,8 @@ function(input, output, session) {
                              this_file_name    <- "joey_darla.csv"
                          } else {
                              req(input$uploaded_data)
-                             path_to_data <- input$uploaded_data$datapath
-                             this_file_name    <- input$uploaded_data$name
+                             path_to_data   <- input$uploaded_data$datapath
+                             this_file_name <- input$uploaded_data$name
                          }
                          
                          # Don't crash if darla data is uploaded with the new-fave button and vice versa
@@ -97,22 +96,16 @@ function(input, output, session) {
                           selected = new_selection)
         
     })
-    
-    
-    # Keep selected_files in sync with the checkboxes
-    observe({
-        selected_files(input$selected_for_removal %||% character(0))
-    })
+
     
     # Remove selected datasets
     observeEvent(input$remove_data_button, {
         
-        to_remove <- selected_files()
+        to_remove <- input$selected_for_removal %||% character(0)
         req(length(to_remove) > 0)
         
         remaining <- setdiff(loaded_files(), to_remove)
         loaded_files(remaining)
-        selected_files(character(0))
         
         if (length(remaining) == 0) {
             # explicitly NULL when last dataset removed
@@ -280,7 +273,7 @@ function(input, output, session) {
                 group_by(phoneme, allophone, formant) %>%
                 nest() %>%
                 mutate(mdl = map(data, ~gam(hz ~ prop_time + s(prop_time, k = 4), data = .)),
-                       preds = map(mdl, ~get_predictions(., cond = list(prop_time = 20:80),
+                       preds = map(mdl, ~get_predictions(., cond = list(prop_time = seq(0.2, 0.8, 0.01)),
                                                          print.summary = FALSE,
                                                          rm.ranef = FALSE))) %>%
                 select(-data, -mdl) %>%
@@ -368,31 +361,8 @@ function(input, output, session) {
     pillai_df <- reactive({
         midpoints_df() %>%
             filter(speaker_id %in% input$speaker_selection,
-                   allophone %in% case_when(input$vowel_pair == "feel-fill"  ~ c("ZEAL",  "GUILT"),
-                                            input$vowel_pair == "fail-fell"  ~ c("FLAIL", "SHELF"),
-                                            input$vowel_pair == "pull-pole"  ~ c("WOLF",  "JOLT"),
-                                            input$vowel_pair == "pole-dull"  ~ c("JOLT",  "MULCH"),
-                                            input$vowel_pair == "pull-dull"  ~ c("WOLF",  "MULCH"),
-
-                                            # TODO: Add Mary-merry-marry
-                                            # input$vowel_pair == "Mary-merry"  ~ c("WOLF",  "MULCH"),
-                                            # input$vowel_pair == "merry-marry"  ~ c("WOLF",  "MULCH"),
-                                            # input$vowel_pair == "Mary-marry"  ~ c("WOLF",  "MULCH"),
-                                            # input$vowel_pair == "north/force-card"  ~ c("WOLF",  "MULCH"),
-
-                                            input$vowel_pair == "pin-pen"    ~ c("BIN",   "BEN"),
-                                            input$vowel_pair == "bat-ban"    ~ c("BAT",   "BAN"),
-
-                                            input$vowel_pair == "vague-beg"  ~ c("VAGUE", "BEG"),
-                                            input$vowel_pair == "vague-bag"  ~ c("VAGUE", "BAG"),
-                                            input$vowel_pair == "beg-bag"    ~ c("BEG",   "BAG"),
-                                            input$vowel_pair == "beg-bet"    ~ c("BEG",   "BET"),
-                                            input$vowel_pair == "bag-bat"    ~ c("BAG",   "BAT"),
-
-                                            input$vowel_pair == "cot-caught"     ~ c("BOT",  "BOUGHT"),
-                                            input$vowel_pair == "goose-fronting" ~ c("TOOT", "BOOT")),
-                   !is.na(F1_norm),
-                   !is.na(F2_norm))
+                   allophone %in% vowel_pair_map[[input$vowel_pair]],
+                   !is.na(F1_norm), !is.na(F2_norm))
     })
     ### Pillai data summary table ----
     output$pillai_pairs_summary <- renderTable({
@@ -448,9 +418,6 @@ function(input, output, session) {
     output$pillai_threshold <- renderPrint({
         cat(round(exp(1)/(nrow(pillai_df())/2),3))
     })
-    output$pillai_threshold_message <- renderPrint({
-        cat("Assuming your speaker is underlyingly merged, their Pillai score is expected to be below this value. This is based on how much data you have.")
-    })
     output$pillai_score <- renderPrint({
         pillai_df() %>%
             summarize(pillai = pillai(cbind(F1, F2) ~ allophone), .groups = "drop_last") %>%
@@ -458,16 +425,10 @@ function(input, output, session) {
             round(3) %>%
             cat()
     })
-    output$pillai_score_message <- renderText({
-        "Here is the Pillai score. Values range from 0 (=complete overlap) to 1 (complete separation)."
-    })
     output$pillai_p <- renderPrint({
         p <- pillai_df() %>%
             summarize(p = manova_p(cbind(F1, F2) ~ allophone), .groups = "drop_last") %>%
             pull()
         cat(ifelse(p < 0.001, "< 0.001", round(p, 3)))
-    })
-    output$pillai_p_message <- renderText({
-        "Here is the p-value. If it's less than 0.05, it means the difference between the two vowels is statistically significant."
     })
 }

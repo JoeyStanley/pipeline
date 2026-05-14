@@ -50,7 +50,8 @@ prep_newfave_data <- function(.df) {
 }
 
 
-
+# Note that this hard-codes Wells. DARLA data comes in ARPABET and FAVE comes in plotnik codes. 
+# Those are both converted before this is called, but it's worth noting the dependency.
 manually_reclassify_some_words <- function(.df) {
     .df |>
         mutate(phoneme =

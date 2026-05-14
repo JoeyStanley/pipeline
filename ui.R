@@ -385,7 +385,7 @@ fluidPage(
                 ),
                 mainPanel(
                     width = 8,
-                    plotOutput("midpoints_plot", width = "800px", height = "600px")
+                    plotOutput("midpoints_plot", width = "100%", height = "600px")
                 )
             )
         ),
@@ -429,22 +429,22 @@ fluidPage(
                             ),
                             hr(),
                             fluidRow(
-                                column(9, textOutput("pillai_threshold_message")),
+                                column(9, p("Assuming your speaker is underlyingly merged, their Pillai score is expected to be below this value. This is based on how much data you have.")),
                                 column(3, textOutput("pillai_threshold"))
                             ),
                             hr(),
                             fluidRow(
-                                column(9, textOutput("pillai_score_message")),
+                                column(9, p("Here is the Pillai score. Values range from 0 (=complete overlap) to 1 (complete separation).")),
                                 column(3, textOutput("pillai_score"))
                             ),
                             hr(),
                             fluidRow(
-                                column(9, textOutput("pillai_p_message")),
+                                column(9, p("Here is the p-value. If it's less than 0.05, it means the difference between the two vowels is statistically significant.")),
                                 column(3, textOutput("pillai_p"))
                             )
                         ),
                         mainPanel(
-                            plotOutput("vowel_pair_plot", width = "800px", height = "600px")
+                            plotOutput("vowel_pair_plot", width = "100%", height = "600px")
                         )
                     )
                 )
