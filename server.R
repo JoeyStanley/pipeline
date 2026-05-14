@@ -10,6 +10,9 @@ function(input, output, session) {
     loaded_files   <- reactiveVal(character(0))  # tracks file names for the UI list
     selected_files <- reactiveVal(character(0))  # tracks which are checked for removal
     
+    # Keep track of which normalizations have been done on this dataset. (Updates when dataset changes.)
+    completed_normalizations <- reactiveVal(character(0))
+    
     # Loading data (first or subsequent)
     observeEvent(input$process_uploaded_button, {
         withProgress(message = "Processing data…",
@@ -27,36 +30,48 @@ function(input, output, session) {
                              this_file_name    <- input$uploaded_data$name
                          }
                          
-                         raw <- read_csv(path_to_data, show_col_types = FALSE) |> 
-                             # keep source file to allow for removing later on
-                             mutate(source_file = this_file_name) 
-                         
-                         # Prep data according to data source.
-                         incProgress(1/4, detail = "Prepping data…")
-                         cleaned <- if (input$data_source == "new-fave") {
-                             prep_newfave_data(raw)
-                         } else {
-                             prep_darla_data(raw)
-                         }
-                         
-                         incProgress(1/4, message = "Applying Order of Operations", detail = "Step 1: Coding allophones…")
-                         ooo1 <- ooo1_code_allophones(cleaned)
-                         
-                         incProgress(1/4, detail = "Step 2: Removing outliers… (Note: this is the most time consuming step)")
-                         ooo2 <- ooo2_remove_outliers(ooo1)
-                         
-                         # Save/add to the new datasets
-                         if (is.null(full_df())) {
-                             full_df(ooo2)
-                         } else {
-                             full_df(bind_rows(full_df(), ooo2))
-                         }
-                         loaded_files(c(loaded_files(), this_file_name))
-                         
-                         list_of_speakers <- full_df() |> pull(speaker_id) |> unique()
-                         updateSelectInput(session, "speaker_selection",
-                                           choices = list_of_speakers)
-                         
+                         # Don't crash if darla data is uploaded with the new-fave button and vice versa
+                         tryCatch({
+                             raw <- read_csv(path_to_data, show_col_types = FALSE) |> 
+                                 # keep source file to allow for removing later on
+                                 mutate(source_file = this_file_name) 
+                             
+                             # Prep data according to data source.
+                             incProgress(1/4, detail = "Prepping data…")
+                             cleaned <- if (input$data_source == "new-fave") {
+                                 prep_newfave_data(raw)
+                             } else {
+                                 prep_darla_data(raw)
+                             }
+                             
+                             incProgress(1/4, message = "Applying Order of Operations", detail = "Step 1: Coding allophones…")
+                             ooo1 <- ooo1_code_allophones(cleaned)
+                             
+                             incProgress(1/4, detail = "Step 2: Removing outliers… (Note: this is the most time consuming step)")
+                             ooo2 <- ooo2_remove_outliers(ooo1)
+                             
+                             # Save/add to the new datasets
+                             if (is.null(full_df())) {
+                                 full_df(ooo2)
+                             } else {
+                                 full_df(bind_rows(full_df(), ooo2))
+                             }
+                             loaded_files(c(loaded_files(), this_file_name))
+                             
+                             # Strip any previously normalized columns so they get recomputed fresh
+                             full_df(full_df() |> select(-matches("F[1234]_[a-z]+$")))
+                             # After adding data, reset what normalization procedures have been done.
+                             completed_normalizations(character(0))
+                             
+                         }, error = function(e) {
+                             showNotification(
+                                 ui       = paste("Processing failed. Please check that your data source selection (e.g. DARLA vs. new-fave)",
+                                                  "matches the file you uploaded.",
+                                                  "\nIf the problem persists, the error was:", conditionMessage(e)),
+                                 type     = "error",
+                                 duration = NULL   # stays until user dismisses it
+                             )
+                         })
                      })
     })
     
@@ -64,6 +79,23 @@ function(input, output, session) {
     observe({
         label <- if (is.null(full_df())) "Process my data" else "Process and add to existing data"
         updateActionButton(session, "process_uploaded_button", label = label)
+    })
+    
+    
+    # Update the list of speakers whenever the full dataset changes.
+    observe({
+        req(full_df())
+        list_of_speakers <- full_df() |> pull(speaker_id) |> unique()
+        
+        # Keep current selection of speakers if it's still valid, otherwise default to first
+        current_selection <- isolate(input$speaker_selection)
+        still_valid <- intersect(current_selection, list_of_speakers)
+        new_selection <- if (length(still_valid) > 0) still_valid else head(list_of_speakers, 1)
+        
+        updateSelectInput(session, "speaker_selection",
+                          choices  = list_of_speakers,
+                          selected = new_selection)
+        
     })
     
     
@@ -78,18 +110,25 @@ function(input, output, session) {
         to_remove <- selected_files()
         req(length(to_remove) > 0)
         
-        message(paste("Here are the selected files I want to remove:", to_remove))
-        
         remaining <- setdiff(loaded_files(), to_remove)
         loaded_files(remaining)
         selected_files(character(0))
         
-        message(paste("Here are the remaining files:", remaining))
+        if (length(remaining) == 0) {
+            # explicitly NULL when last dataset removed
+            full_df(NULL)  
+        } else {
+            
+            # Re-filter the data to only keep rows from remaining files
+            full_df(full_df() |> filter(source_file %in% remaining))
+            
+            # Strip any previously normalized columns so they get recomputed fresh
+            full_df(full_df() |> select(-matches("F[1234]_[a-z]+$")))
+            
+        }
         
-        # Re-filter the data to only keep rows from remaining files
-        full_df(full_df() |> filter(source_file %in% remaining))
-        
-        
+        # After removing data, reset what normalization procedures have been done.
+        completed_normalizations(character(0))
     })
     
     
@@ -113,18 +152,20 @@ function(input, output, session) {
     # Because it's a reactive thing, I'll put it here. 
     
     observe({
+        # Make sure there is data and it's not empty.
         req(full_df())
+        req(nrow(full_df()) > 0)
         
-        # Get the normalization methods from the list saved in procesing.R.
-        info <- norm_methods[[input$norm_method]]
-        # If this method has been done, this is the name of the column that already exists.
-        col_to_check <- paste0("F1", info$suffix)
+        # Get the normalization methods from the list saved in sociophonetics.R
+        method <- input$norm_method
+        info   <- norm_methods[[method]]
         
         # Only run normalization if we haven't done it before
-        if (!hasName(full_df(), col_to_check)) {
+        if (!method %in% completed_normalizations()) {
             withProgress(message = "Applying Order of Operations", detail = "Step 3: Normalizing…", {
                 full_df(info$fn(full_df()))
             })
+            completed_normalizations(c(completed_normalizations(), method))
         }
         
         # Create a copy of this new column and call it "norm" for ease of subsequent processing.
@@ -218,6 +259,7 @@ function(input, output, session) {
         trajectories_df <- trajectories_df_to_plot()
         # Elsewhere allophones, for the hull
         vowel_space <- vowel_space_df_for_hull()
+
             
         # Get different summaries of the data for trajectories.
         summarized_trajectories_df <- trajectories_df |> 
@@ -370,8 +412,10 @@ function(input, output, session) {
         reference_points <- vowel_space %>%
             filter(allophone %in% c("BEET", "BOAT", "BOT", "BAT"))
 
-        # Basic plot
-        p <- ggplot(pillai_df(), aes(F2_norm, F1_norm, color = allophone))
+        # Basic plot. Note that this uses raw values instead of normalized values.
+        # My blog post shows that doing raw vs. normalized (at least for a few normalization methods) doesn't matter.
+        # If I want to do normalized values, I'd have to add a new tab to toggle between procedures.
+        p <- ggplot(pillai_df(), aes(F2, F1, color = allophone))
 
         if (input$pillai_reference_points) {
             p <- p + geom_text(data = reference_points, aes(label = allophone), color = "gray20", size = 10)

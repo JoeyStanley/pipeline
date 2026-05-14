@@ -111,7 +111,7 @@ fluidPage(
                                         choices = "no speaker",
                                         multiple = TRUE,
                                         selectize = FALSE,
-                                        size = 20
+                                        size = 20,
                             )
                         ),
                         

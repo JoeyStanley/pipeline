@@ -69,7 +69,7 @@ ooo1_code_allophones <- function(.df) {
 }
 
 
-
+# Note that this creates the is_stopword column that ooo4 depends on.
 ooo2_remove_outliers <- function(.df) {
     .df |> 
         mutate(is_stopword = word %in% c(stopwords(source = "marimo"),
@@ -83,7 +83,7 @@ ooo2_remove_outliers <- function(.df) {
 
 
 
-
+# Depends on the is_stopword column that ooo2 creates.
 ooo4_filter_otherwise_good_data <- function(.df) {
     .df |> 
         filter(stress == 1,
