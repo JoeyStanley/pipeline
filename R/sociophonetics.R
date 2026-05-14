@@ -1,3 +1,9 @@
+
+# A list of stopwords
+my_stopwords <- c(stopwords(source = "marimo"),
+                    "okay", "was", "gonna", "because", "wanna", "got", "mh", "kinda")
+
+
 # A list of normalization methods and their calls. This is used to reduce the amount of code in server.R
 norm_methods <- list(
     # Note that "n" is the "generic" one, which allows for flexiblity in creating a new method. 

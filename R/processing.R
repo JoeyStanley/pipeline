@@ -73,8 +73,7 @@ ooo1_code_allophones <- function(.df) {
 # Note that this creates the is_stopword column that ooo4 depends on.
 ooo2_remove_outliers <- function(.df) {
     .df |> 
-        mutate(is_stopword = word %in% c(stopwords(source = "marimo"),
-                                         "was", "gonna", "because", "wanna", "got", "mh", "kinda")) |> 
+        mutate(is_stopword = word %in% my_stopwords) |> 
         mutate(outlier_group = case_when(is_stopword ~ "stopword",
                                          stress == 0 ~ "unstressed",
                                          TRUE ~ allophone)) |> 
