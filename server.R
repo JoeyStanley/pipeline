@@ -185,7 +185,9 @@ function(input, output, session) {
     
     ### Show all data ----
     output$show_all_data <- DT::renderDataTable(DT::datatable({
-        full_df()
+        req(full_df())
+        full_df() |>
+            mutate(across(matches("F[1234]"), ~round(., 4)))
     }))
 
     ### Export data ----
