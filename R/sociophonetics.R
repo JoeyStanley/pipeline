@@ -1,5 +1,6 @@
 
 # A list of stopwords
+# TODO: Make this list flexible like the GSV.
 my_stopwords <- c(stopwords(source = "marimo"),
                     "okay", "was", "gonna", "because", "wanna", "got", "mh", "kinda")
 
