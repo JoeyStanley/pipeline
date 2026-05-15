@@ -1,4 +1,5 @@
 fluidPage(
+    includeCSS("www/pipeline.css"),
     
     # Application title
     titlePanel("Pipeline"),

@@ -1,0 +1,151 @@
+/* Pipeline — custom theme inspired by the Salt Lake Tabernacle organ */
+
+/* ── Variables ─────────────────────────────────────────── */
+:root {
+    --pipe-brown:      #4a2e1a;   /* dark walnut, pipe case */
+    --pipe-brown-mid:  #7a4a2a;   /* mid walnut, hover states */
+    --pipe-brown-light:#c4956a;   /* lighter wood tone */
+    --pipe-gold:       #c9a84c;   /* antique gold, pipe faces */
+    --pipe-gold-light: #e8d5a3;   /* pale gold, backgrounds */
+    --pipe-cream:      #f9f5ee;   /* ivory, main background */
+    --pipe-dark:       #1e1209;   /* near-black, text */
+}
+
+/* ── Page background ───────────────────────────────────── */
+body {
+    background-color: var(--pipe-cream);
+    color: var(--pipe-dark);
+}
+
+/* ── Title panel ───────────────────────────────────────── */
+.navbar, .title-panel, h2.shiny-title {
+    color: var(--pipe-brown) !important;
+}
+
+/* ── Tab pills ─────────────────────────────────────────── */
+.nav-pills > li > a {
+    color:        var(--pipe-brown);
+    border:       1px solid transparent;
+    border-radius: 4px;
+}
+.nav-pills > li > a:hover {
+    background-color: var(--pipe-gold-light);
+    color:            var(--pipe-brown);
+    border-color:     var(--pipe-brown-light);
+}
+.nav-pills > li.active > a,
+.nav-pills > li.active > a:hover {
+    background-color: var(--pipe-brown);
+    color:            var(--pipe-gold-light);
+    border-color:     var(--pipe-brown);
+}
+
+/* ── Inner tabs (tabsetPanel type="tabs") ──────────────── */
+.nav-tabs > li > a {
+    color: var(--pipe-brown);
+}
+.nav-tabs > li > a:hover {
+    background-color: var(--pipe-gold-light);
+    border-color:     var(--pipe-brown-light) var(--pipe-brown-light) transparent;
+}
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus {
+    color:            var(--pipe-brown);
+    border-color:     var(--pipe-brown-light) var(--pipe-brown-light) #fff;
+    border-top:       2px solid var(--pipe-gold);
+}
+
+/* ── Sidebar ───────────────────────────────────────────── */
+.well {
+    background-color: #f0e8d8;
+    border-color:     var(--pipe-brown-light);
+    border-left:      3px solid var(--pipe-gold);
+}
+
+/* ── Buttons ───────────────────────────────────────────── */
+.btn-default,
+.btn {
+    background-color: var(--pipe-brown);
+    color:            var(--pipe-gold-light);
+    border-color:     var(--pipe-brown);
+}
+.btn-default:hover,
+.btn:hover {
+    background-color: var(--pipe-brown-mid);
+    color:            var(--pipe-gold);
+    border-color:     var(--pipe-brown);
+}
+.btn-default:active,
+.btn:active {
+    background-color: var(--pipe-dark);
+    color:            var(--pipe-gold);
+}
+
+/* ── Download buttons ──────────────────────────────────── */
+.btn-success {
+    background-color: var(--pipe-gold);
+    color:            var(--pipe-dark);
+    border-color:     var(--pipe-gold);
+}
+.btn-success:hover {
+    background-color: var(--pipe-brown-light);
+    border-color:     var(--pipe-brown);
+    color:            var(--pipe-dark);
+}
+
+/* ── Headings ──────────────────────────────────────────── */
+h3, h4 {
+    color:         var(--pipe-brown);
+    border-bottom: 1px solid var(--pipe-gold-light);
+    padding-bottom: 4px;
+}
+
+/* ── Horizontal rules ──────────────────────────────────── */
+hr {
+    border-color: var(--pipe-gold-light);
+}
+
+/* ── Progress bar ──────────────────────────────────────── */
+.progress-bar {
+    background-color: var(--pipe-gold);
+}
+.shiny-notification {
+    background-color: var(--pipe-cream);
+    border-left:      4px solid var(--pipe-gold);
+    color:            var(--pipe-dark);
+}
+.shiny-notification-error {
+    border-left-color: #8b2020;
+}
+
+/* ── Sliders ───────────────────────────────────────────── */
+.irs-bar,
+.irs-bar-edge {
+    background:   var(--pipe-brown);
+    border-color: var(--pipe-brown);
+}
+.irs-single,
+.irs-from,
+.irs-to {
+    background: var(--pipe-gold);
+    color:      var(--pipe-dark);
+}
+.irs-handle {
+    border-color: var(--pipe-brown) !important;
+}
+
+/* ── Checkboxes and radio buttons ──────────────────────── */
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+    accent-color: var(--pipe-brown);
+}
+
+/* ── Links ─────────────────────────────────────────────── */
+a {
+    color: var(--pipe-brown-mid);
+}
+a:hover {
+    color:           var(--pipe-brown);
+    text-decoration: underline;
+}

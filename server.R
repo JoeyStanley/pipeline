@@ -14,7 +14,7 @@ function(input, output, session) {
     
     # Loading data (first or subsequent)
     observeEvent(input$process_uploaded_button, {
-        withProgress(message = "Processing data…",
+        withProgress(message = "Activating air compressor…",
                      detail = "This may take a few seconds.",
                      value = 0,
                      {
@@ -43,7 +43,7 @@ function(input, output, session) {
                                  prep_darla_data(raw)
                              }
                              
-                             incProgress(1/4, message = "Applying Order of Operations", detail = "Step 1: Coding allophones…")
+                             incProgress(1/4, message = "Pulling out all the stops", detail = "Step 1: Coding allophones…")
                              ooo1 <- ooo1_code_allophones(cleaned)
                              
                              incProgress(1/4, detail = "Step 2: Removing outliers… (Note: this is the most time consuming step)")
@@ -155,7 +155,7 @@ function(input, output, session) {
         
         # Only run normalization if we haven't done it before
         if (!method %in% completed_normalizations()) {
-            withProgress(message = "Applying Order of Operations", detail = "Step 3: Normalizing…", {
+            withProgress(message = "Pulling out all the stops", detail = "Step 3: Normalizing…", {
                 full_df(info$fn(full_df()))
             })
             completed_normalizations(c(completed_normalizations(), method))
