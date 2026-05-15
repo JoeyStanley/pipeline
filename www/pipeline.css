@@ -40,21 +40,28 @@ body {
     border-color:     var(--pipe-brown);
 }
 
+
 /* ── Inner tabs (tabsetPanel type="tabs") ──────────────── */
 .nav-tabs > li > a {
-    color: var(--pipe-brown);
+    color:        var(--pipe-brown);
+    padding:     8px 12px;   /* Bootstrap's default — make explicit */
+    border-top:   2px solid transparent;  /* reserve space, invisible */
+    box-sizing:   border-box;
 }
 .nav-tabs > li > a:hover {
     background-color: var(--pipe-gold-light);
-    border-color:     var(--pipe-brown-light) var(--pipe-brown-light) transparent;
+    border-color:     transparent transparent transparent;
+    border-top:       2px solid var(--pipe-brown-light);
 }
 .nav-tabs > li.active > a,
 .nav-tabs > li.active > a:hover,
 .nav-tabs > li.active > a:focus {
-    color:            var(--pipe-brown);
-    border-color:     var(--pipe-brown-light) var(--pipe-brown-light) #fff;
-    border-top:       2px solid var(--pipe-gold);
+    color:        var(--pipe-brown);
+    border-color: var(--pipe-brown-light) var(--pipe-brown-light) #fff;
+    border-top:   2px solid var(--pipe-gold);
 }
+
+
 
 /* ── Sidebar ───────────────────────────────────────────── */
 .well {
