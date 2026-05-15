@@ -180,7 +180,8 @@ function(input, output, session) {
     })
     
     # Create a trajectory df. Same as the normed df, but here for clarity.
-    trajectories_df <- reactive({ full_df() |>  ooo4_filter_otherwise_good_data() })
+    # TODO: Trajectories
+    # trajectories_df <- reactive({ full_df() |>  ooo4_filter_otherwise_good_data() })
     
     
     ### Show all data ----
@@ -245,13 +246,14 @@ function(input, output, session) {
                    phoneme %in% input$vowels,
                    allophone_environment %in% input$environments)
     })
-    trajectories_df_to_plot <- reactive({
-        req(trajectories_df())
-        trajectories_df() |> 
-            filter(speaker_id %in% input$speaker_selection,
-                   phoneme %in% input$vowels,
-                   allophone_environment %in% input$environments)
-    })
+    # TODO: Trajectories
+    # trajectories_df_to_plot <- reactive({
+    #     req(trajectories_df())
+    #     trajectories_df() |> 
+    #         filter(speaker_id %in% input$speaker_selection,
+    #                phoneme %in% input$vowels,
+    #                allophone_environment %in% input$environments)
+    # })
     vowel_space_df_for_hull <- reactive({
         req(midpoints_df())
         midpoints_df() |> 
@@ -266,50 +268,52 @@ function(input, output, session) {
         
         ### Get the data. (Offloaded to reactive so it only reruns data prep if needed and not for small plot changes.)
         midpoint_df <- midpoint_df_to_plot()
-        trajectories_df <- trajectories_df_to_plot()
+        # TODO: Trajectories
+        # trajectories_df <- trajectories_df_to_plot() 
         # Elsewhere allophones, for the hull
         vowel_space <- vowel_space_df_for_hull()
 
-            
+        # TODO: Trajectories
         # Get different summaries of the data for trajectories.
-        summarized_trajectories_df <- trajectories_df |> 
-            mutate(plotting_group = token_id)
-        if (input$trajectory_type == "mean") {
-            summarized_trajectories_df <- trajectories_df %>%
-                group_by(phoneme, allophone, prop_time) %>%
-                summarize(across(matches("F[1234]"), .fns = mean), .groups = "drop_last") %>%
-                mutate(plotting_group = allophone)
-        } else if (input$trajectory_type == "median") {
-            summarized_trajectories_df <- trajectories_df %>%
-                group_by(phoneme, allophone, prop_time) %>%
-                summarize(across(matches("F[1234]"), .fns = median), .groups = "drop_last") %>%
-                mutate(plotting_group = allophone)
-        } else if (input$trajectory_type == "smoothed") {
-            summarized_trajectories_df <- trajectories_df %>%
-                pivot_longer(cols = matches("F[1234]"), names_to = "formant", values_to = "hz") %>%
-                group_by(phoneme, allophone, formant) %>%
-                nest() %>%
-                mutate(mdl = map(data, ~gam(hz ~ prop_time + s(prop_time, k = 4), data = .)),
-                       preds = map(mdl, ~get_predictions(., cond = list(prop_time = seq(0.2, 0.8, 0.01)),
-                                                         print.summary = FALSE,
-                                                         rm.ranef = FALSE))) %>%
-                select(-data, -mdl) %>%
-                unnest(preds) %>%
-                rename(hz = fit) %>%
-                select(-CI) %>%
-                pivot_wider(names_from = formant, values_from = hz) %>%
-                mutate(plotting_group = allophone)
-        }
+        # summarized_trajectories_df <- trajectories_df |> 
+        #     mutate(plotting_group = token_id)
+        # if (input$trajectory_type == "mean") {
+        #     summarized_trajectories_df <- trajectories_df %>%
+        #         group_by(phoneme, allophone, prop_time) %>%
+        #         summarize(across(matches("F[1234]"), .fns = mean), .groups = "drop_last") %>%
+        #         mutate(plotting_group = allophone)
+        # } else if (input$trajectory_type == "median") {
+        #     summarized_trajectories_df <- trajectories_df %>%
+        #         group_by(phoneme, allophone, prop_time) %>%
+        #         summarize(across(matches("F[1234]"), .fns = median), .groups = "drop_last") %>%
+        #         mutate(plotting_group = allophone)
+        # } else if (input$trajectory_type == "smoothed") {
+        #     summarized_trajectories_df <- trajectories_df %>%
+        #         pivot_longer(cols = matches("F[1234]"), names_to = "formant", values_to = "hz") %>%
+        #         group_by(phoneme, allophone, formant) %>%
+        #         nest() %>%
+        #         mutate(mdl = map(data, ~gam(hz ~ prop_time + s(prop_time, k = 4), data = .)),
+        #                preds = map(mdl, ~get_predictions(., cond = list(prop_time = seq(0.2, 0.8, 0.01)),
+        #                                                  print.summary = FALSE,
+        #                                                  rm.ranef = FALSE))) %>%
+        #         select(-data, -mdl) %>%
+        #         unnest(preds) %>%
+        #         rename(hz = fit) %>%
+        #         select(-CI) %>%
+        #         pivot_wider(names_from = formant, values_from = hz) %>%
+        #         mutate(plotting_group = allophone)
+        # }
 
+        # TODO: Trajectories
         # Labels (mean for points, onset for trajectories)
-        if (input$show_trajectories & input$trajectory_type != "raw") {
-            labels_df <- summarized_trajectories_df |> 
-                filter(prop_time == min(prop_time))
-        } else{
+        # if (input$show_trajectories & input$trajectory_type != "raw") {
+        #     labels_df <- summarized_trajectories_df |> 
+        #         filter(prop_time == min(prop_time))
+        # } else{
             labels_df <- midpoint_df %>%
                 group_by(phoneme, allophone) %>%
                 summarize(across(matches("F\\d_norm"), mean, na.rm = TRUE), .groups = "drop_last")
-        }
+        # }
 
         # Reference points
         reference_points <- vowel_space %>%
@@ -345,11 +349,12 @@ function(input, output, session) {
                                    color = .data[[input$color_variable]]),
                                size = input$words_size, alpha = input$words_alpha)
         }
-        if (input$show_trajectories) {
-            p <- p + geom_path(data = summarized_trajectories_df, 
-                               aes(group = plotting_group, color = .data[[input$color_variable]]),
-                               arrow = joey_arrow(), alpha = input$trajectories_alpha, linewidth = input$trajectories_size)
-        }
+        # TODO: Trajectories
+        # if (input$show_trajectories) {
+        #     p <- p + geom_path(data = summarized_trajectories_df, 
+        #                        aes(group = plotting_group, color = .data[[input$color_variable]]),
+        #                        arrow = joey_arrow(), alpha = input$trajectories_alpha, linewidth = input$trajectories_size)
+        # }
         # if (!is.na(input$trajectory_label_location)) {
         #   p <- p + geom_text(data = trajectory_labels_df,
         #                      aes(color = .data[[input$color_variable]], label = .data[[input$label_variable]]),

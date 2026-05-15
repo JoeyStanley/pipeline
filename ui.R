@@ -253,33 +253,33 @@ fluidPage(
                             
                             hr(),
                             
-                            fluidRow(
-                                column(12,
-                                       checkboxInput(inputId = "show_trajectories",
-                                                     label   = h3("Trajectories"),
-                                                     value   = FALSE)
-                                ),
-                                column(6,
-                                       sliderInput(inputId = "trajectories_alpha",
-                                                   label = "Opacity",
-                                                   min = 0,
-                                                   max = 1,
-                                                   value = 1,
-                                                   width="100%"),
-                                       sliderInput(inputId = "trajectories_size",
-                                                   label = "Size",
-                                                   min = 0.01,
-                                                   max = 2,
-                                                   value = 1,
-                                                   width="100%")
-                                ),
-                                column(6,
-                                       selectInput("trajectory_type", 
-                                                   label = "Trajectory type",
-                                                   choices = c("raw", "mean", "median", "smoothed"),
-                                                   selected = "median")
-                                )
-                            ),
+                            # fluidRow(
+                            #     column(12,
+                            #            checkboxInput(inputId = "show_trajectories",
+                            #                          label   = h3("Trajectories"),
+                            #                          value   = FALSE)
+                            #     ),
+                            #     column(6,
+                            #            sliderInput(inputId = "trajectories_alpha",
+                            #                        label = "Opacity",
+                            #                        min = 0,
+                            #                        max = 1,
+                            #                        value = 1,
+                            #                        width="100%"),
+                            #            sliderInput(inputId = "trajectories_size",
+                            #                        label = "Size",
+                            #                        min = 0.01,
+                            #                        max = 2,
+                            #                        value = 1,
+                            #                        width="100%")
+                            #     ),
+                            #     column(6,
+                            #            selectInput("trajectory_type", 
+                            #                        label = "Trajectory type",
+                            #                        choices = c("raw", "mean", "median", "smoothed"),
+                            #                        selected = "median")
+                            #     )
+                            # ),
                             
                             
                             hr(),
@@ -395,10 +395,8 @@ fluidPage(
             )
         ),
         
-        # # Future tab for trajectory plot goes here
-        # #tabPanel(title = "Trajectory plot"),
-        # 
-        # 
+        # TODO (possibly) : A dedicated trajectory tab
+
         ## Acoustic Analysis ----
         tabPanel(
             title = "Acoustic analysis",
