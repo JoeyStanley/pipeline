@@ -376,10 +376,15 @@ function(input, output, session) {
     ## Pillai scores ----
     ### Pillai scores data ----
     pillai_df <- reactive({
+        # Make sure there is data
+        req(midpoints_df())
+        req(input$vowel_pair %in% names(vowel_pair_map))
+        
         midpoints_df() %>%
             filter(speaker_id %in% input$speaker_selection,
                    allophone %in% vowel_pair_map[[input$vowel_pair]],
-                   !is.na(F1_norm), !is.na(F2_norm))
+                   !is.na(F1_norm), 
+                   !is.na(F2_norm))
     })
     ### Pillai data summary table ----
     output$pillai_pairs_summary <- renderTable({
@@ -388,9 +393,14 @@ function(input, output, session) {
     })
     ### Pillai plot ----
     output$vowel_pair_plot <- renderPlot({
-        group_means <- pillai_df() %>%
-            group_by(allophone) %>%
-            summarize(across(matches("F[1234]"), mean), .groups = "drop_last")
+        
+        req(pillai_df())
+        req(nrow(pillai_df()) > 0)
+        req(length(unique(pillai_df()$allophone)) == 2)
+        
+        group_means <- pillai_df() |> 
+            group_by(allophone) |> 
+            summarize(across(matches("F[1234]_norm"), mean), .groups = "drop_last")
         
         # Elsewhere allophones, for the hull
         vowel_space <- vowel_space_df_for_hull()
@@ -402,7 +412,9 @@ function(input, output, session) {
         # Basic plot. Note that this uses raw values instead of normalized values.
         # My blog post shows that doing raw vs. normalized (at least for a few normalization methods) doesn't matter.
         # If I want to do normalized values, I'd have to add a new tab to toggle between procedures.
-        p <- ggplot(pillai_df(), aes(F2, F1, color = allophone))
+        print(pillai_df())
+        
+        p <- ggplot(pillai_df(), aes(F2_norm, F1_norm, color = allophone))
 
         if (input$pillai_reference_points) {
             p <- p + geom_text(data = reference_points, aes(label = allophone), color = "gray20", size = 10)
@@ -437,14 +449,14 @@ function(input, output, session) {
     })
     output$pillai_score <- renderPrint({
         pillai_df() %>%
-            summarize(pillai = pillai(cbind(F1, F2) ~ allophone), .groups = "drop_last") %>%
+            summarize(pillai = pillai(cbind(F1_norm, F2_norm) ~ allophone), .groups = "drop_last") %>%
             pull() %>%
             round(3) %>%
             cat()
     })
     output$pillai_p <- renderPrint({
         p <- pillai_df() %>%
-            summarize(p = manova_p(cbind(F1, F2) ~ allophone), .groups = "drop_last") %>%
+            summarize(p = manova_p(cbind(F1_norm, F2_norm) ~ allophone), .groups = "drop_last") %>%
             pull()
         cat(ifelse(p < 0.001, "< 0.001", round(p, 3)))
     })

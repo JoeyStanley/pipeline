@@ -410,16 +410,27 @@ fluidPage(
                     sidebarLayout(
                         sidebarPanel(
                             width = 3,
+                            
                             selectInput("vowel_pair",
-                                        label = h4("Vowel pair"),
-                                        choices = list("prelateral" = c("feel-fill", "fail-fell", "pull-pole", "pole-dull", "pull-dull"),
-                                                       # "prerhotic"  = c("Mary-merry", "merry-marry", "Mary-marry", "north/force-card"),
-                                                       "prenasal"   = c("pin-pen", "bat-ban"),
-                                                       "prevelar"   = c("vague-beg", "vague-bag", "beg-bag", "beg-bet", "bag-bat"),
-                                                       "other"      = c("cot-caught", "goose-fronting")),
+                                        label    = h4("Vowel pair"),
+                                        choices  = lapply(vowel_pair_groups, names),
                                         selected = "feel-fill",
                                         multiple = FALSE,
                                         selectize = TRUE),
+                            
+                            
+                            
+                            
+                            # selectInput("vowel_pair",
+                            #             label = h4("Vowel pair"),
+                            #             choices = list("prelateral" = c("feel-fill", "fail-fell", "pull-pole", "pole-dull", "pull-dull"),
+                            #                            # "prerhotic"  = c("Mary-merry", "merry-marry", "Mary-marry", "north/force-card"),
+                            #                            "prenasal"   = c("pin-pen", "bat-ban"),
+                            #                            "prevelar"   = c("vague-beg", "vague-bag", "beg-bag", "beg-bet", "bag-bat"),
+                            #                            "other"      = c("cot-caught", "goose-fronting")),
+                            #             selected = "feel-fill",
+                            #             multiple = FALSE,
+                            #             selectize = TRUE),
                             
                             checkboxInput("pillai_reference_points", label = "Show reference points", value = 1),
                             checkboxInput("pillai_vowel_space",      label = "Show vowel space", value = 1),

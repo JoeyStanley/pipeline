@@ -16,26 +16,63 @@ norm_methods <- list(
     "wf" = list(suffix = "_wf", fn = function(df) norm_track_wattfab(df, matches("F[1234]$"), .by = speaker_id, .token_id_col = token_id, .time_col = prop_time))
 )
 
+# Put the vowels in groups. This is pulled into the UI when selecting vowels.
+# TODO: Add Mary-merry-marry and north/force/start but those rely on information beyond what DARLA/newfave gives
+vowel_pair_groups <- list(
+    "prelateral" = list(
+        "feel-fill"      = c("ZEAL",  "GUILT"),
+        "fail-fell"      = c("FLAIL", "SHELF"),
+        "pull-pole"      = c("WOLF",  "JOLT"),
+        "pole-dull"      = c("JOLT",  "MULCH"),
+        "pull-dull"      = c("WOLF",  "MULCH")
+    ),
+    "prenasal" = list(
+        "pin-pen"        = c("BIN",  "BEN"),
+        "bat-ban"        = c("BAT",  "BAN")
+    ),
+    "prevelar" = list(
+        "vague-beg"      = c("VAGUE", "BEG"),
+        "vague-bag"      = c("VAGUE", "BAG"),
+        "beg-bag"        = c("BEG",   "BAG"),
+        "beg-bet"        = c("BEG",   "BET"),
+        "bag-bat"        = c("BAG",   "BAT")
+    ),
+    "other" = list(
+        "cot-caught"     = c("BOT",  "BOUGHT"),
+        "goose-fronting" = c("TOOT", "BOOT")
+    )
+)
+
+
 
 # A list of vowel pairs to work with when doing pillai scores.
-vowel_pair_map <- list(
-    "feel-fill"      = c("ZEAL",  "GUILT"),
-    "fail-fell"      = c("FLAIL", "SHELF"),
-    "pull-pole"      = c("WOLF",  "JOLT"),
-    "pole-dull"      = c("JOLT",  "MULCH"),
-    "pull-dull"      = c("WOLF",  "MULCH"),
-    
-    # TODO: Add Mary-merry-marry and north/force/start but those rely on information beyond what DARLA/newfave gives
-    
-    "pin-pen"        = c("BIN",   "BEN"),
-    "bat-ban"        = c("BAT",   "BAN"),
-    
-    "vague-beg"      = c("VAGUE", "BEG"),
-    "vague-bag"      = c("VAGUE", "BAG"),
-    "beg-bag"        = c("BEG",   "BAG"),
-    "beg-bet"        = c("BEG",   "BET"),
-    "bag-bat"        = c("BAG",   "BAT"),
-    
-    "cot-caught"     = c("BOT",  "BOUGHT"),
-    "goose-fronting" = c("TOOT", "BOOT")
+# vowel_pair_map <- list(
+#     "feel-fill"      = c("ZEAL",  "GUILT"),
+#     "fail-fell"      = c("FLAIL", "SHELF"),
+#     "pull-pole"      = c("WOLF",  "JOLT"),
+#     "pole-dull"      = c("JOLT",  "MULCH"),
+#     "pull-dull"      = c("WOLF",  "MULCH"),
+#     
+#     
+#     
+#     "pin-pen"        = c("BIN",   "BEN"),
+#     "bat-ban"        = c("BAT",   "BAN"),
+#     
+#     "vague-beg"      = c("VAGUE", "BEG"),
+#     "vague-bag"      = c("VAGUE", "BAG"),
+#     "beg-bag"        = c("BEG",   "BAG"),
+#     "beg-bet"        = c("BEG",   "BET"),
+#     "bag-bat"        = c("BAG",   "BAT"),
+#     
+#     "cot-caught"     = c("BOT",  "BOUGHT"),
+#     "goose-fronting" = c("TOOT", "BOOT")
+# )
+
+# Use this to pull out the pairs from the grouping.
+vowel_pair_map <- unlist(
+    lapply(vowel_pair_groups, function(group) group),
+    recursive = FALSE
 )
+
+# Fix names — unlist adds the group prefix e.g. "prelateral.feel-fill"
+names(vowel_pair_map) <- sub("^[^.]+\\.", "", names(vowel_pair_map))
