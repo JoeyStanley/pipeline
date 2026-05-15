@@ -189,6 +189,21 @@ function(input, output, session) {
         full_df() |>
             mutate(across(matches("F[1234]"), ~round(., 4)))
     }))
+    
+    # output$
+    
+    output$splash <- renderUI({
+        if (is.null(full_df())) {
+            # Splash page
+            div(
+                style = "padding: 40px;",
+                includeMarkdown("README.md")
+            )
+        } else {
+            # returns NULL when data is loaded, which renders nothing
+        }
+        
+    })
 
     ### Export data ----
     

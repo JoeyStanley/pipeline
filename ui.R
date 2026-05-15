@@ -86,7 +86,10 @@ fluidPage(
                     p("Click the button below to download this processed version of the data. It is your same data but it has been cleaned and gone through a pipeline of processing steps already."),
                     downloadButton("export_processed", "Export this processed data", width = "30%")
                 ),
+                
+                ### Main panel ----
                 mainPanel(
+                    uiOutput("splash"),
                     DT::dataTableOutput("show_all_data")
                 )
             )

@@ -1,5 +1,6 @@
 library(shiny)
-#library(DT)
+#library(DT) #these are called as needed
+library(markdown)
 
 # Data management 
 library(tidyverse)
