@@ -116,6 +116,25 @@ fluidPage(
                         ),
                         
                         
+                        ### Processing ----
+                        tabPanel(
+                            title = "Processing",
+                            fluidRow(
+                                column(12,
+                                       radioButtons("norm_method", "Normalization method",
+                                                    choices = list("none" = "n",
+                                                                   "Nearey" = "lm",
+                                                                   "Watt & Fabricius" = "wf",
+                                                                   "ΔF" = "df",
+                                                                   "Lobanov" = "z"),
+                                                    selected = "n",
+                                                    inline = FALSE,
+                                                    width = '100%')
+                                )
+                            )
+                        ),
+                        
+                        
                         ### Vowel selection ----
                         tabPanel(
                             title = "Vowels",
@@ -141,24 +160,6 @@ fluidPage(
                         
                         # Tab for words will go here eventually. (See GSV for how to do that.)
                         
-                        
-                        ### Processing ----
-                        tabPanel(
-                            title = "Processing",
-                            fluidRow(
-                                column(12,
-                                       radioButtons("norm_method", "Normalization method",
-                                                    choices = list("none" = "n",
-                                                                   "Nearey" = "lm",
-                                                                   "Watt & Fabricius" = "wf",
-                                                                   "ΔF" = "df",
-                                                                   "Lobanov" = "z"),
-                                                    selected = "n",
-                                                    inline = FALSE,
-                                                    width = '100%')
-                                       )
-                            )
-                        ),
                         
                         ### Plot elements ----
                         tabPanel(
