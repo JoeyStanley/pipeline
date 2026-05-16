@@ -4,7 +4,7 @@ options(shiny.maxRequestSize=100*1024^2)
 
 function(input, output, session) {
     
-    ## Add and remove data ----
+    ## Globals ----
     
     full_df <- reactiveVal(NULL)
     loaded_files   <- reactiveVal(character(0))  # tracks file names for the UI list
@@ -12,7 +12,11 @@ function(input, output, session) {
     # Keep track of which normalizations have been done on this dataset. (Updates when dataset changes.)
     completed_normalizations <- reactiveVal(character(0))
     
-    # Loading data (first or subsequent)
+    
+    
+    ## 1. Data management ----
+    
+    ### 1.1 Loading data ----
     observeEvent(input$process_uploaded_button, {
         withProgress(message = "Activating air compressor…",
                      detail = "This may take a few seconds.",
@@ -74,12 +78,11 @@ function(input, output, session) {
                      })
     })
     
-    # Update button label dynamically
+    # Update the "process" button label dynamically
     observe({
         label <- if (is.null(full_df())) "Process my data" else "Process and add to existing data"
         updateActionButton(session, "process_uploaded_button", label = label)
     })
-    
     
     # Update the list of speakers whenever the full dataset changes.
     observe({
@@ -98,7 +101,7 @@ function(input, output, session) {
     })
 
     
-    # Remove selected datasets
+    ### 1.2 Removing data ----
     observeEvent(input$remove_data_button, {
         
         to_remove <- input$selected_for_removal %||% character(0)
@@ -112,18 +115,18 @@ function(input, output, session) {
             full_df(NULL)  
         } else {
             
-            # Re-filter the data to only keep rows from remaining files
-            full_df(full_df() |> filter(source_file %in% remaining))
+            full_df(full_df() |> 
+                        # Re-filter the data to only keep rows from remaining files
+                        filter(source_file %in% remaining) |> 
             
-            # Strip any previously normalized columns so they get recomputed fresh
-            full_df(full_df() |> select(-matches("F[1234]_[a-z]+$")))
+                        # Strip any previously normalized columns so they get recomputed fresh
+                        full_df() |> select(-matches("F[1234]_[a-z]+$")))
             
         }
         
         # After removing data, reset what normalization procedures have been done.
         completed_normalizations(character(0))
     })
-    
     
     # Render the dynamic checklist of loaded files
     output$loaded_datasets_list <- renderUI({
@@ -139,11 +142,30 @@ function(input, output, session) {
     })
     
     
-    ### Get subsets----
+    ## 2. Data processing ----
     
-    #### Normalize ----
+    ### 2.0 Subsets -----
+    
+    # Create just a midpoints df.
+    midpoints_df <- reactive({ 
+        req(full_df())
+        
+        full_df() |> 
+            ooo4_filter_otherwise_good_data() |>
+            filter(prop_time > 0.4,
+                   prop_time < 0.6) |>
+            summarize(across(matches("F[1234]"), mean, na.rm = TRUE),
+                      .by = -c(prop_time, time, matches("F\\d")))
+    })
+    
+    # Create a trajectory df. Same as the normed df, but here for clarity.
+    # TODO: Trajectories
+    # trajectories_df <- reactive({ full_df() |>  ooo4_filter_otherwise_good_data() })
+    
+    
+    
+    ### 2.1 Normalization ----
     # Because it's a reactive thing, I'll put it here. 
-    
     observe({
         # Make sure there is data and it's not empty.
         req(full_df())
@@ -167,32 +189,16 @@ function(input, output, session) {
                            F2_norm = .data[[paste0("F2", info$suffix)]]))
     })
     
-    # Create just a midpoints df.
-    midpoints_df <- reactive({ 
-        req(full_df())
-        
-        full_df() |> 
-            ooo4_filter_otherwise_good_data() |>
-            filter(prop_time > 0.4,
-                   prop_time < 0.6) |>
-            summarize(across(matches("F[1234]"), mean, na.rm = TRUE),
-              .by = -c(prop_time, time, matches("F\\d")))
-    })
     
-    # Create a trajectory df. Same as the normed df, but here for clarity.
-    # TODO: Trajectories
-    # trajectories_df <- reactive({ full_df() |>  ooo4_filter_otherwise_good_data() })
+    ### 2.2 Display data ----
     
-    
-    ### Show all data ----
     output$show_all_data <- DT::renderDataTable(DT::datatable({
         req(full_df())
         full_df() |>
             mutate(across(matches("F[1234]"), ~round(., 4)))
     }))
     
-    # output$
-    
+    ### 2.3 Splash screen ----
     output$splash <- renderUI({
         if (is.null(full_df())) {
             # Splash page
@@ -206,8 +212,7 @@ function(input, output, session) {
         
     })
 
-    ### Export data ----
-    
+    ### 2.4 Export data ----
     output$export_processed <- downloadHandler(
         filename = function() { "pipeline_output.csv" },
         content  = function(file) {
@@ -215,13 +220,14 @@ function(input, output, session) {
         }
     )
     
-    
 
-    ## Download image ----
-
+    ### 2.5 Download plot ----
     output$fig_download <- downloadHandler(
+        
+        
         filename = function() { paste0(input$fig_filename, ".", tolower(input$fig_filetype)) },
         content = function(file) {
+            req(full_df()) # require some data to prevent crashing
             ggsave(file,
                    plot   = generate_plot(),
                    height = input$fig_height,
@@ -232,12 +238,7 @@ function(input, output, session) {
     )
 
 
-    ## Generate the main plot ----
-    # Take that generated plot and push it to the output object.
-    # Note that having a separate function to generate and call the plot is better because of the downloading code.
-    output$midpoints_plot <- renderPlot({
-        generate_plot()
-    })
+    ## 3. Main plot ----
     
     midpoint_df_to_plot <- reactive({
         req(midpoints_df())
@@ -259,12 +260,18 @@ function(input, output, session) {
         midpoints_df() |> 
             filter(speaker_id %in% input$speaker_selection,
                    allophone %in% c("BEET", "BIT", "BAIT", "BET", "BAT", "BOT", "BOUGHT", "BOAT", "PUT", "BOOT")) %>%
-            group_by(speaker_id, allophone) %>%
-            summarize(across(matches("F[1234]_norm"), mean, na.rm = TRUE), .groups = "drop_last")
+            group_by() %>%
+            summarize(across(matches("F[1234]_norm"), mean, na.rm = TRUE), .by = c(speaker_id, allophone))
     })
 
+    
+    
     # A function for generating the plot.
     generate_plot <- function() {
+        
+        # Security checks
+        req(midpoint_df_to_plot())
+        req(nrow(midpoint_df_to_plot()) > 0)
         
         ### Get the data. (Offloaded to reactive so it only reruns data prep if needed and not for small plot changes.)
         midpoint_df <- midpoint_df_to_plot()
@@ -279,13 +286,12 @@ function(input, output, session) {
         #     mutate(plotting_group = token_id)
         # if (input$trajectory_type == "mean") {
         #     summarized_trajectories_df <- trajectories_df %>%
-        #         group_by(phoneme, allophone, prop_time) %>%
-        #         summarize(across(matches("F[1234]"), .fns = mean), .groups = "drop_last") %>%
+        #         group_by( %>%
+        #         summarize(across(matches("F[1234]"), .fns = mean), .by = c(phoneme, allophone, prop_time))) %>%
         #         mutate(plotting_group = allophone)
         # } else if (input$trajectory_type == "median") {
         #     summarized_trajectories_df <- trajectories_df %>%
-        #         group_by(phoneme, allophone, prop_time) %>%
-        #         summarize(across(matches("F[1234]"), .fns = median), .groups = "drop_last") %>%
+        #         summarize(across(matches("F[1234]"), .fns = median), .by = c(phoneme, allophone, prop_time)) %>%
         #         mutate(plotting_group = allophone)
         # } else if (input$trajectory_type == "smoothed") {
         #     summarized_trajectories_df <- trajectories_df %>%
@@ -311,8 +317,7 @@ function(input, output, session) {
         #         filter(prop_time == min(prop_time))
         # } else{
             labels_df <- midpoint_df %>%
-                group_by(phoneme, allophone) %>%
-                summarize(across(matches("F\\d_norm"), mean, na.rm = TRUE), .groups = "drop_last")
+                summarize(across(matches("F\\d_norm"), mean, na.rm = TRUE), .by = c(phoneme, allophone))
         # }
 
         # Reference points
@@ -320,10 +325,10 @@ function(input, output, session) {
             filter(speaker_id %in% input$speaker_selection,
                    allophone %in% c("BEET", "BOAT", "BOT", "BAT"))
 
-        ### Basic elements ----
+        ### Basic elements 
         p <- ggplot(midpoint_df, aes(F2_norm, F1_norm))
 
-        ### Optional elements ----
+        ### Optional elements 
         if (input$main_reference_points) {
             p <- p + geom_text(data = reference_points, aes(label = allophone), color = "gray20", size = 10)
         }
@@ -361,7 +366,7 @@ function(input, output, session) {
         #                      size = input$means_size, alpha = input$means_alpha)
         # }
 
-        ### Final elements----
+        ### Final elements
         p <- p +
             scale_x_reverse() +
             scale_y_reverse() +
@@ -375,37 +380,108 @@ function(input, output, session) {
         p
 
     }
+    # Take that generated plot and push it to the output object.
+    # Note that having a separate function to generate and call the plot is better because of the downloading code.
+    output$midpoints_plot <- renderPlot({
+        generate_plot()
+    })
 
 
 
-    ## Pillai scores ----
-    ### Pillai scores data ----
-    pillai_df <- reactive({
-        # Make sure there is data
+    ## 4. Acoustic Analysis----
+    
+    ### 4.1 Pillai scores ----
+    #### Pillai data ----
+    
+    # Here's the dataset the Pillai scores are calculated on.
+    pillai_df_raw <- reactive({
         req(midpoints_df())
         req(input$vowel_pair %in% names(vowel_pair_map))
-        
         midpoints_df() %>%
             filter(speaker_id %in% input$speaker_selection,
                    allophone %in% vowel_pair_map[[input$vowel_pair]],
-                   !is.na(F1_norm), 
-                   !is.na(F2_norm))
+                   !is.na(F1),
+                   !is.na(F2))
     })
-    ### Pillai data summary table ----
+    # Check if there's enough data.
+    pillai_valid <- reactive({
+        
+        # Make sure there is data
+        req(pillai_df_raw())
+        req(input$vowel_pair %in% names(vowel_pair_map))
+        
+        # Check both categories are present and have enough observations
+        counts <- pillai_df_raw() |> count(allophone)
+        
+        if (nrow(counts) < 2) {
+            list(valid = FALSE,
+                 message = "Both vowels must be present in the data for the selected speaker(s).")
+        } else if (any(counts$n < 5)) {
+            list(valid = FALSE,
+                 message = "Each vowel category needs at least 5 observations.")
+        } else if (nrow(pillai_df_raw()) < 30) {
+            list(valid = TRUE,
+                 message = "Note: It is recommended that you have at least 30 observations.")
+        } else {
+            list(valid = TRUE, message = NULL)
+        }
+    })
+    # Validation message — invisible when valid
+    output$pillai_validation_message <- renderUI({
+        req(pillai_valid()$message)  # only renders when invalid
+        tags$p(pillai_valid()$message)
+    })
+    # Pillai data summary table (because it uses the _raw() data, it'll show regardless of how much data there is)
     output$pillai_pairs_summary <- renderTable({
-        pillai_df() %>%
+        pillai_df_raw() |> 
             count(allophone, name = "number of tokens")
     })
-    ### Pillai plot ----
+    # A separate dataset that only exists if there's enough data.
+    pillai_df <- reactive({
+        req(pillai_valid()$valid)
+        pillai_df_raw()
+    })
+    
+    
+    
+    #### Pillai results ----
+    
+    # This one shows regardless of how much data there is.
+    output$pillai_total_n <- renderText({
+        nrow(pillai_df())
+    })
+    
+    # For the remaining three, the numbers are NA if there isn't enough.
+    output$pillai_threshold <- renderText({ 
+        if (!pillai_valid()$valid) return("NA")
+        round(exp(1)/(nrow(pillai_df())/2),3)
+    })
+    output$pillai_score <- renderText({ 
+        if (!pillai_valid()$valid) return("NA")
+        pillai_df() |> 
+            summarize(pillai = pillai(cbind(F1_norm, F2_norm) ~ allophone)) |> 
+            pull() |> 
+            round(3)
+    })
+    output$pillai_p <- renderText({
+        if (!pillai_valid()$valid) return("NA")
+        p <- pillai_df() |> 
+            summarize(p = manova_p(cbind(F1_norm, F2_norm) ~ allophone)) |> 
+            pull()
+        paste(ifelse(p < 0.001, "< 0.001", round(p, 3)))
+    })
+    
+
+    #### Pillai plot ----
+    
     output$vowel_pair_plot <- renderPlot({
         
-        req(pillai_df())
-        req(nrow(pillai_df()) > 0)
-        req(length(unique(pillai_df()$allophone)) == 2)
+        # Security checks
+        req(pillai_valid()$valid)
+        req(nrow(pillai_df_raw()) > 0)
         
         group_means <- pillai_df() |> 
-            group_by(allophone) |> 
-            summarize(across(matches("F[1234]_norm"), mean), .groups = "drop_last")
+            summarize(across(matches("F[1234]_norm"), mean), .by = allophone)
         
         # Elsewhere allophones, for the hull
         vowel_space <- vowel_space_df_for_hull()
@@ -413,13 +489,8 @@ function(input, output, session) {
         # Reference points
         reference_points <- vowel_space %>%
             filter(allophone %in% c("BEET", "BOAT", "BOT", "BAT"))
-
-        # Basic plot. Note that this uses raw values instead of normalized values.
-        # My blog post shows that doing raw vs. normalized (at least for a few normalization methods) doesn't matter.
-        # If I want to do normalized values, I'd have to add a new tab to toggle between procedures.
-        print(pillai_df())
         
-        p <- ggplot(pillai_df(), aes(F2_norm, F1_norm, color = allophone))
+        p <- ggplot(pillai_df_raw(), aes(F2_norm, F1_norm, color = allophone))
 
         if (input$pillai_reference_points) {
             p <- p + geom_text(data = reference_points, aes(label = allophone), color = "gray20", size = 10)
@@ -437,32 +508,5 @@ function(input, output, session) {
             scale_y_reverse() +
             theme_minimal() +
             theme(legend.position = "none")
-
-    })
-    ### Pillai results ----
-    output$pillai_total_n <- renderPrint({
-        cat(nrow(pillai_df()))
-    })
-    output$pillai_total_n_message <- renderPrint({
-        warning <- if_else(nrow(pillai_df()) < 30,
-                           "(It's recommended that you have at least 30 tokens.)",
-                           "")
-        cat(paste("Here is the total number of tokens you're using to calculate a Pillai score.", warning))
-    })
-    output$pillai_threshold <- renderPrint({
-        cat(round(exp(1)/(nrow(pillai_df())/2),3))
-    })
-    output$pillai_score <- renderPrint({
-        pillai_df() %>%
-            summarize(pillai = pillai(cbind(F1_norm, F2_norm) ~ allophone), .groups = "drop_last") %>%
-            pull() %>%
-            round(3) %>%
-            cat()
-    })
-    output$pillai_p <- renderPrint({
-        p <- pillai_df() %>%
-            summarize(p = manova_p(cbind(F1_norm, F2_norm) ~ allophone), .groups = "drop_last") %>%
-            pull()
-        cat(ifelse(p < 0.001, "< 0.001", round(p, 3)))
     })
 }

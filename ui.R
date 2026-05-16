@@ -390,7 +390,12 @@ fluidPage(
                 ),
                 mainPanel(
                     width = 8,
-                    plotOutput("midpoints_plot", width = "100%", height = "600px")
+                    
+                    shinycssloaders::withSpinner(
+                        plotOutput("midpoints_plot", width = "100%", height = "600px"),
+                        color = PIPE_BROWN,
+                        type  = 6
+                    )
                 )
             )
         ),
@@ -416,49 +421,42 @@ fluidPage(
                                         multiple = FALSE,
                                         selectize = TRUE),
                             
+                            uiOutput("pillai_validation_message"),
                             
+                            # TODO: Add an explanation of what the selected vowel pair means?
                             
-                            
-                            # selectInput("vowel_pair",
-                            #             label = h4("Vowel pair"),
-                            #             choices = list("prelateral" = c("feel-fill", "fail-fell", "pull-pole", "pole-dull", "pull-dull"),
-                            #                            # "prerhotic"  = c("Mary-merry", "merry-marry", "Mary-marry", "north/force-card"),
-                            #                            "prenasal"   = c("pin-pen", "bat-ban"),
-                            #                            "prevelar"   = c("vague-beg", "vague-bag", "beg-bag", "beg-bet", "bag-bat"),
-                            #                            "other"      = c("cot-caught", "goose-fronting")),
-                            #             selected = "feel-fill",
-                            #             multiple = FALSE,
-                            #             selectize = TRUE),
-                            
-                            checkboxInput("pillai_reference_points", label = "Show reference points", value = 1),
-                            checkboxInput("pillai_vowel_space",      label = "Show vowel space", value = 1),
-                            
-                            # Add an explanation of what the selected vowel pair means.
-                            
-                            hr(),
                             tableOutput("pillai_pairs_summary"),
-                            fluidRow(
-                                column(9, textOutput("pillai_total_n_message")),
-                                column(3, textOutput("pillai_total_n"))
-                            ),
+                            
                             hr(),
-                            fluidRow(
-                                column(9, p("Assuming your speaker is underlyingly merged, their Pillai score is expected to be below this value. This is based on how much data you have.")),
-                                column(3, textOutput("pillai_threshold"))
-                            ),
-                            hr(),
-                            fluidRow(
-                                column(9, p("Here is the Pillai score. Values range from 0 (=complete overlap) to 1 (complete separation).")),
-                                column(3, textOutput("pillai_score"))
-                            ),
-                            hr(),
-                            fluidRow(
-                                column(9, p("Here is the p-value. If it's less than 0.05, it means the difference between the two vowels is statistically significant.")),
-                                column(3, textOutput("pillai_p"))
-                            )
+                            h4("Plot options"),
+                            checkboxInput("pillai_reference_points", label = "Show reference points", value = 1),
+                            checkboxInput("pillai_vowel_space",      label = "Show vowel space", value = 1)
                         ),
                         mainPanel(
-                            plotOutput("vowel_pair_plot", width = "100%", height = "600px")
+                            fluidRow(
+                                column(3,
+                                       p("Total tokens", class = "pillai-label"),
+                                       div(class = "pillai-stat", textOutput("pillai_total_n")),
+                                       p("Number of tokens used to calculate the Pillai score.", class = "pillai-label")),
+                                column(3,
+                                       p("Threshold", class = "pillai-label"),
+                                       div(class = "pillai-stat", textOutput("pillai_threshold")),
+                                       p("Below this value suggests an underlying merger.", class = "pillai-label")),
+                                column(3,
+                                       p("Pillai score", class = "pillai-label"),
+                                       div(class = "pillai-stat", textOutput("pillai_score")),
+                                       p("0 = complete overlap, 1 = complete separation.", class = "pillai-label")),
+                                column(3,
+                                       p("p-value", class = "pillai-label"),
+                                       div(class = "pillai-stat", textOutput("pillai_p")),
+                                       p("Values below 0.05 indicate a statistically significant difference.", class = "pillai-label"))
+                            ),
+                            
+                            shinycssloaders::withSpinner(
+                                plotOutput("vowel_pair_plot", width = "100%", height = "600px"),
+                                color = PIPE_BROWN,
+                                type  = 6           # spinner style, 1-8
+                            )
                         )
                     )
                 )

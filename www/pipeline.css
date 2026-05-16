@@ -156,3 +156,20 @@ a:hover {
     color:           var(--pipe-brown);
     text-decoration: underline;
 }
+
+
+/* ── Pillai score display ──────────────────────────────── */
+.pillai-stat {
+    font-size:   2.5rem;
+    font-weight: bold;
+    color:       var(--pipe-brown);
+    text-align:  right;
+    line-height: 1;
+    margin-top:  8px;
+}
+
+.pillai-label {
+    /*font-size:  1rem;*/
+    color:      var(--pipe-brown-light);
+    text-align: right;
+}
