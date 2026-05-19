@@ -4,7 +4,7 @@ if (file.exists("renv/activate.R")) {
 
 
 library(shiny)
-library(DT) #these are called as needed
+library(DT) 
 library(shinycssloaders) # for spiny wheel when loading plot
 library(markdown)
 
