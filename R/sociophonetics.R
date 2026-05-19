@@ -9,11 +9,11 @@ my_stopwords <- c(stopwords(source = "marimo"),
 norm_methods <- list(
     # Note that "n" is the "generic" one, which allows for flexiblity in creating a new method. 
     # Without change, it returns the exact same as the input. So "_n" means no normalization.
-    "n"  = list(suffix = "_n",  fn = function(df) norm_track_generic(df, matches("F[1234]$"), .by = speaker_id, .token_id_col = token_id, .time_col = prop_time)),
-    "lm" = list(suffix = "_lm", fn = function(df) norm_track_nearey(df,  matches("F[1234]$"), .by = speaker_id, .token_id_col = token_id, .time_col = prop_time)),
-    "z"  = list(suffix = "_z",  fn = function(df) norm_track_lobanov(df, matches("F[1234]$"), .by = speaker_id, .token_id_col = token_id, .time_col = prop_time)),
-    "df" = list(suffix = "_df", fn = function(df) norm_track_deltaF(df,  matches("F[1234]$"), .by = speaker_id, .token_id_col = token_id, .time_col = prop_time)),
-    "wf" = list(suffix = "_wf", fn = function(df) norm_track_wattfab(df, matches("F[1234]$"), .by = speaker_id, .token_id_col = token_id, .time_col = prop_time))
+    "n"  = list(suffix = "_n",  fn = function(df) norm_track_generic(df, matches("F[1234]$"), .by = speaker_id, .token_id_col = token_id, .time_col = prop_time, .silent = TRUE)),
+    "lm" = list(suffix = "_lm", fn = function(df) norm_track_nearey(df,  matches("F[1234]$"), .by = speaker_id, .token_id_col = token_id, .time_col = prop_time, .silent = TRUE)),
+    "z"  = list(suffix = "_z",  fn = function(df) norm_track_lobanov(df, matches("F[1234]$"), .by = speaker_id, .token_id_col = token_id, .time_col = prop_time, .silent = TRUE)),
+    "df" = list(suffix = "_df", fn = function(df) norm_track_deltaF(df,  matches("F[1234]$"), .by = speaker_id, .token_id_col = token_id, .time_col = prop_time, .silent = TRUE)),
+    "wf" = list(suffix = "_wf", fn = function(df) norm_track_wattfab(df, matches("F[1234]$"), .by = speaker_id, .token_id_col = token_id, .time_col = prop_time, .silent = TRUE))
 )
 
 # Put the vowels in groups. This is pulled into the UI when selecting vowels.
