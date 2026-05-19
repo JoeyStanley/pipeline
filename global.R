@@ -1,6 +1,6 @@
 library(shiny)
-#library(DT) #these are called as needed
-library(shinycssloaders) # for spinny wheel when loading plot
+library(DT) #these are called as needed
+library(shinycssloaders) # for spiny wheel when loading plot
 library(markdown)
 
 # Data management 
@@ -19,7 +19,7 @@ library(itsadug)
 
 # Linguistics-specific
 library(stopwords)
-library(joeyr)
+library(joeyr) # remotes::install_github("joeystanley/joeyr")
 library(tidynorm)
 
 
