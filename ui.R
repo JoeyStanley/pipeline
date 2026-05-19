@@ -441,15 +441,15 @@ fluidPage(
                                 column(3,
                                        p("Threshold", class = "pillai-label"),
                                        div(class = "pillai-stat", textOutput("pillai_threshold")),
-                                       p("Below this value suggests an underlying merger.", class = "pillai-label")),
+                                       p("A Pillai score below this value suggests an underlying merger.", class = "pillai-label")),
                                 column(3,
                                        p("Pillai score", class = "pillai-label"),
                                        div(class = "pillai-stat", textOutput("pillai_score")),
-                                       p("0 = complete overlap, 1 = complete separation.", class = "pillai-label")),
+                                       p("0 = complete overlap; ", br(), "1 = complete separation.", class = "pillai-label")),
                                 column(3,
                                        p("p-value", class = "pillai-label"),
                                        div(class = "pillai-stat", textOutput("pillai_p")),
-                                       p("Values below 0.05 indicate a statistically significant difference.", class = "pillai-label"))
+                                       p("Values below 0.05 indicate a statistically significant difference between vowel classes.", class = "pillai-label"))
                             ),
                             
                             shinycssloaders::withSpinner(
