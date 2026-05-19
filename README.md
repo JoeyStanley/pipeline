@@ -54,6 +54,7 @@ Here are my short-term plans for inclusion in future updates:
 * Incorporation of DCTs (a là Fruehwald [2024](https://jofrhwld.github.io/blog/posts/2024/07/2024-07-19_dct-r/), [2025](https://jofrhwld.github.io/dct_normalization/))
 * Additional and custom stopword lists
 * Alternative outlier removal methods
+* Toggle between transcription systems (Wells, IPA, FAVE, Trager & Block, etc.)
 * Mary-merry-marry vowel pairs
 * Additional quantitative analyses besides pillai scores
 
