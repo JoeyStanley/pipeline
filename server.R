@@ -202,15 +202,15 @@ function(input, output, session) {
     output$splash <- renderUI({
         if (is.null(full_df())) {
             # Splash page
-            div(
-                style = "padding: 40px;",
-                includeMarkdown("README.md")
-            )
+            div(style = "padding: 40px;",
+                # Rather than render it on the fly, just use the existing, prerendered one.
+                shiny::includeHTML("www/readme.html"))
         } else {
             # returns NULL when data is loaded, which renders nothing
         }
         
     })
+    
 
     ### 2.4 Export data ----
     output$export_processed <- downloadHandler(

@@ -31,3 +31,12 @@ PIPE_GOLD        <- "#c9a84c"   # antique gold, pipe faces
 PIPE_GOLD_LIGHT  <- "#e8d5a3"   # pale gold, backgrounds
 PIPE_CREAM       <- "#f9f5ee"   # ivory, main background
 PIPE_DARK        <- "#1e1209"   # near-black, text
+
+
+
+# Prerender the HTML file of the Readme to sidestep the issue of having the server do that with out-of-date dependencies.
+if (!file.exists("www/readme.html")) {
+    commonmark::markdown_html(
+        paste(readLines("README.md"), collapse = "\n")
+    ) |> writeLines("www/readme.html")
+}
