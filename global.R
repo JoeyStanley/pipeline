@@ -1,3 +1,8 @@
+if (file.exists("renv/activate.R")) {
+    source("renv/activate.R")
+}
+
+
 library(shiny)
 library(DT) #these are called as needed
 library(shinycssloaders) # for spiny wheel when loading plot
