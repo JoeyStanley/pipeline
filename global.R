@@ -40,8 +40,9 @@ PIPE_DARK        <- "#1e1209"   # near-black, text
 
 
 # Prerender the HTML file of the Readme to sidestep the issue of having the server do that with out-of-date dependencies.
-if (!file.exists("www/readme.html")) {
-    commonmark::markdown_html(
-        paste(readLines("README.md"), collapse = "\n")
-    ) |> writeLines("www/readme.html")
-}
+# Rerun this when the README file changes.
+# if (!file.exists("www/readme.html")) {
+#     commonmark::markdown_html(
+#         paste(readLines("README.md"), collapse = "\n")
+#     ) |> writeLines("www/readme.html")
+# }
