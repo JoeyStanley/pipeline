@@ -503,6 +503,7 @@ function(input, output, session) {
             geom_text(aes(label = word)) +
             stat_ellipse() +
             geom_text(data = group_means, aes(label = allophone), size = 10) +
+            coord_fixed(2.2) + 
             scale_color_ptol() +
             scale_x_reverse() +
             scale_y_reverse() +
