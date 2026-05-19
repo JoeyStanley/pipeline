@@ -17,6 +17,10 @@ From there, you have a bunch of options to interact with your data. You can subs
 
 Pipeline also has some rudimentary acoustic analysis. Currently, the focus is on overlap between certain pairs of vowels. Pillai scores are calculated and they are interpreted in light of Stanley & Sneller's ([2023](https://doi.org/10.1121/10.0016757)) threshold given the sample size. I hope to add more statistical analysis soon.
 
+## How to get started
+
+Since Pipeline isn't deployed anywhere, you can just copy this repository and run it locally. That means you'll have to know a thing or two about Github and R to use it. I hope to make it available online soon so that it is a fully functioning web app.
+
 ## Data options
 
 Currently, Pipeline supports two kinds of input files. 
@@ -43,6 +47,15 @@ The data processing and visualizations are done using the various packages withi
 
 Pipeline hasn't been tested robustly yet, so there will likely be issues. Please be patient as I develop this because I can't foresee all the use cases users present me with.
 
+Here are my short-term plans for inclusion in future updates:
+
+* Better handling in plots and stats for multiple speakers.
+* Plotting trajectories
+* Incorporation of DCTs (a là Fruehwald [2024](https://jofrhwld.github.io/blog/posts/2024/07/2024-07-19_dct-r/), [2025](https://jofrhwld.github.io/dct_normalization/))
+* Additional and custom stopword lists
+* Alternative outlier removal methods
+* Mary-merry-marry vowel pairs
+* Additional quantitative analyses besides pillai scores
 
 ## References
 
