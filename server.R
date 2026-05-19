@@ -154,7 +154,7 @@ function(input, output, session) {
             ooo4_filter_otherwise_good_data() |>
             filter(prop_time > 0.4,
                    prop_time < 0.6) |>
-            summarize(across(matches("F[1234]"), mean, na.rm = TRUE),
+            summarize(across(matches("F[1234]"), \(x) mean(x, na.rm = TRUE)),
                       .by = -c(prop_time, time, matches("F\\d")))
     })
     
@@ -261,7 +261,7 @@ function(input, output, session) {
             filter(speaker_id %in% input$speaker_selection,
                    allophone %in% c("BEET", "BIT", "BAIT", "BET", "BAT", "BOT", "BOUGHT", "BOAT", "PUT", "BOOT")) %>%
             group_by() %>%
-            summarize(across(matches("F[1234]_norm"), mean, na.rm = TRUE), .by = c(speaker_id, allophone))
+            summarize(across(matches("F[1234]_norm"), \(x) mean(x, na.rm = TRUE)), .by = c(speaker_id, allophone))
     })
 
     
@@ -317,7 +317,7 @@ function(input, output, session) {
         #         filter(prop_time == min(prop_time))
         # } else{
             labels_df <- midpoint_df %>%
-                summarize(across(matches("F\\d_norm"), mean, na.rm = TRUE), .by = c(phoneme, allophone))
+                summarize(across(matches("F\\d_norm"), \(x) mean(x, na.rm = TRUE)), .by = c(phoneme, allophone))
         # }
 
         # Reference points
