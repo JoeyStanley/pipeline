@@ -19,7 +19,7 @@ Pipeline also has some rudimentary acoustic analysis. Currently, the focus is on
 
 ## How to get started
 
-Since Pipeline isn't deployed anywhere, you can just copy this repository and run it locally. That means you'll have to know a thing or two about Github and R to use it. I hope to make it available online soon so that it is a fully functioning web app.
+Pipeline is available at [stanley.byu.edu/pipeline](https://stanley.byu.edu/pipeline/). On the tab to the left, follow the instructions to upload a spreadsheet of formant measurements. 
 
 ## Data options
 
