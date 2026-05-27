@@ -203,8 +203,7 @@ function(input, output, session) {
         if (is.null(full_df())) {
             # Splash page
             div(style = "padding: 40px;",
-                # Rather than render it on the fly, just use the existing, prerendered one.
-                shiny::includeHTML("www/readme.html"))
+                includeMarkdown("splash.md"))
         } else {
             # returns NULL when data is loaded, which renders nothing
         }
