@@ -120,7 +120,7 @@ function(input, output, session) {
                         filter(source_file %in% remaining) |> 
             
                         # Strip any previously normalized columns so they get recomputed fresh
-                        full_df() |> select(-matches("F[1234]_[a-z]+$")))
+                        select(-matches("F[1234]_[a-z]+$")))
             
         }
         
