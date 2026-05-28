@@ -46,6 +46,25 @@ function(input, output, session) {
 
     ### 1.1 Loading data ----
     observeEvent(input$process_uploaded_button, {
+
+        # Determine the filename before doing anything else so we can check for duplicates.
+        this_file_name <- if (input$data_source == "sample") {
+            "joey_darla.csv"
+        } else {
+            req(input$uploaded_data)
+            input$uploaded_data$name
+        }
+
+        # Guard against loading the same file twice.
+        if (this_file_name %in% loaded_files()) {
+            showNotification(
+                ui       = paste0('"', this_file_name, '" is already loaded. Remove it first if you want to reload it.'),
+                type     = "warning",
+                duration = 5
+            )
+            return()
+        }
+
         withProgress(message = "Activating air compressor…",
                      detail = "This may take a few seconds.",
                      value = 0,
@@ -54,11 +73,8 @@ function(input, output, session) {
                          # Get the data path. If uploaded, then pull from there. If sample, then pull from local data.
                          if (input$data_source == "sample") {
                              path_to_data <- "data/joey_darla.csv"
-                             this_file_name    <- "joey_darla.csv"
                          } else {
-                             req(input$uploaded_data)
-                             path_to_data   <- input$uploaded_data$datapath
-                             this_file_name <- input$uploaded_data$name
+                             path_to_data <- input$uploaded_data$datapath
                          }
                          
                          # Don't crash if darla data is uploaded with the new-fave button and vice versa
