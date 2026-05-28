@@ -159,12 +159,14 @@ function(input, output, session) {
             full_df(NULL)  
         } else {
             
-            full_df(full_df() |> 
+            full_df(full_df() |>
                         # Re-filter the data to only keep rows from remaining files
-                        filter(source_file %in% remaining) |> 
-            
+                        filter(source_file %in% remaining) |>
                         # Strip any previously normalized columns so they get recomputed fresh
-                        select(-matches("F[1234]_[a-z]+$")))
+                        select(-matches("F[1234]_[a-z]+$")) |>
+                        # Drop columns that are entirely NA — can happen when e.g. new-fave data
+                        # (which has F3) is removed and only DARLA data (no F3) remains.
+                        select(where(\(x) !all(is.na(x)))))
             
         }
         
