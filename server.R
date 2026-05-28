@@ -425,10 +425,26 @@ function(input, output, session) {
         p
 
     }
-    # Take that generated plot and push it to the output object.
-    # Note that having a separate function to generate and call the plot is better because of the downloading code.
-    output$midpoints_plot <- renderPlot({
-        generate_plot()
+    # Render the main vowel plot as an image so that width, height, and res can
+    # all be set together correctly. CSS dimensions use 96 DPI so the plot
+    # occupies the right physical space on screen; the PNG is rendered at the
+    # user-selected DPI and the browser scales it down for retina-like sharpness.
+    # Note: generate_plot() is also used by the download handler (ggsave), which
+    # is independent of these display dimensions.
+    output$midpoints_plot <- renderImage(deleteFile = TRUE, {
+        dpi  <- as.integer(input$plot_dpi)
+        w_px <- as.integer(input$plot_width_in  * dpi)
+        h_px <- as.integer(input$plot_height_in * dpi)
+
+        tmpfile <- tempfile(fileext = ".png")
+        png(tmpfile, width = w_px, height = h_px, res = dpi, units = "px")
+        print(generate_plot())
+        dev.off()
+
+        list(src    = tmpfile,
+             width  = as.integer(input$plot_width_in  * 96),
+             height = as.integer(input$plot_height_in * 96),
+             alt    = "Vowel plot")
     })
 
 
@@ -548,7 +564,6 @@ function(input, output, session) {
             geom_text(aes(label = word)) +
             stat_ellipse() +
             geom_text(data = group_means, aes(label = allophone), size = 10) +
-            coord_fixed(2.2) + 
             scale_color_ptol() +
             scale_x_reverse() +
             scale_y_reverse() +

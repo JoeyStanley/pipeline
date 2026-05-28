@@ -317,7 +317,15 @@ fluidPage(
                                         multiple = FALSE,
                                         selectize = TRUE),
                             hr(),
-                            checkboxInput("show_legend", label = "Show legend?", value = FALSE)
+                            checkboxInput("show_legend", label = "Show legend?", value = FALSE),
+                            hr(),
+                            h4("Plot size"),
+                            fluidRow(
+                                column(4, numericInput("plot_width_in",  label = "Width (in)",  value = 10, min = 1, max = 20, step = 0.5)),
+                                column(4, numericInput("plot_height_in", label = "Height (in)", value = 7,  min = 1, max = 20, step = 0.5)),
+                                column(4, numericInput("plot_dpi", label = "DPI",
+                                                       value = 150, min = 72, max = 300, step = 1))
+                            )
                         ),
                         
                         ### Download plot ----
@@ -363,7 +371,7 @@ fluidPage(
                     width = 8,
                     
                     shinycssloaders::withSpinner(
-                        plotOutput("midpoints_plot", width = "100%", height = "600px"),
+                        imageOutput("midpoints_plot", width = "auto", height = "auto"),
                         color = PIPE_BROWN,
                         type  = 6
                     )
