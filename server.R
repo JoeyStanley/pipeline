@@ -397,8 +397,8 @@ function(input, output, session) {
         p <- p +
             scale_x_reverse() +
             scale_y_reverse() +
-            labs(title = input$title,
-                 subtitle = input$subtitle,
+            labs(title    = if (nzchar(input$title))    input$title    else NULL,
+                 subtitle = if (nzchar(input$subtitle)) input$subtitle else NULL,
                  x = input$x_label,
                  y = input$y_label) +
             theme_minimal(base_size = input$base_size, base_family = input$base_family) +

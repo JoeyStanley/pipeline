@@ -286,10 +286,10 @@ fluidPage(
                             title = "Customize",
                             textInput("title",
                                       label = "Title",
-                                      value = NA),
+                                      value = ""),
                             textInput("subtitle",
                                       label = "Subtitle",
-                                      value = NA),
+                                      value = ""),
                             fluidRow(
                                 column(6,
                                        textInput("x_label",
