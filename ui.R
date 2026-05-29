@@ -354,9 +354,6 @@ fluidPage(
                                                    label = h4("File type"),
                                                    choices = c("JPG", "PNG", "PDF"),
                                                    selected = "JPG",
-                                                   multiple = FALSE,
-                                                   selectize = F,
-                                                   size = 3,
                                                    width = "100%")
                                 )
                             ),
