@@ -200,7 +200,13 @@ function(input, output, session) {
             ooo4_filter_otherwise_good_data() |>
             filter(prop_time > 0.4,
                    prop_time < 0.6) |>
+
+            # Matches("F[1234]") intentionally catches both raw (F1, F2) and normalized (F1_lm, F2_z, etc.) columns.
+            # Midpoints are computed for all of them.
             summarize(across(matches("F[1234]"), \(x) mean(x, na.rm = TRUE)),
+                      # `.by` uses negative selection to "group by everything except time and formant columns",
+                      # i.e. collapse prop_time into a single row per token.
+                      # All I need is token_id, and the rest are "passed on" so that they're available for later processing.
                       .by = -c(prop_time, time, matches("F\\d")))
     })
     
@@ -261,7 +267,7 @@ function(input, output, session) {
     output$export_processed <- downloadHandler(
         filename = function() { "pipeline_output.csv" },
         content  = function(file) {
-            full_df() %>% write_csv(file = file)
+            full_df() |> write_csv(file = file)
         }
     )
     
@@ -304,8 +310,8 @@ function(input, output, session) {
         req(midpoints_df())
         midpoints_df() |> 
             filter(speaker_id %in% input$speaker_selection,
-                   allophone %in% c("BEET", "BIT", "BAIT", "BET", "BAT", "BOT", "BOUGHT", "BOAT", "PUT", "BOOT")) %>%
-            group_by() %>%
+                   allophone %in% c("BEET", "BIT", "BAIT", "BET", "BAT", "BOT", "BOUGHT", "BOAT", "PUT", "BOOT")) |>
+            # Matches("F[1234]") intentionally catches both raw (F1, F2) and normalized (F1_lm, F2_z, etc.) columns.
             summarize(across(matches("F[1234]_norm"), \(x) mean(x, na.rm = TRUE)), .by = c(speaker_id, allophone))
     })
 
@@ -361,12 +367,13 @@ function(input, output, session) {
         #     labels_df <- summarized_trajectories_df |> 
         #         filter(prop_time == min(prop_time))
         # } else{
-            labels_df <- midpoint_df %>%
+            labels_df <- midpoint_df |>
+                # Matches("F[1234]") intentionally catches both raw (F1, F2) and normalized (F1_lm, F2_z, etc.) columns.
                 summarize(across(matches("F\\d_norm"), \(x) mean(x, na.rm = TRUE)), .by = c(phoneme, allophone))
         # }
 
         # Reference points
-        reference_points <- vowel_space %>%
+        reference_points <- vowel_space |>
             filter(speaker_id %in% input$speaker_selection,
                    allophone %in% c("BEET", "BOAT", "BOT", "BAT"))
 
@@ -458,7 +465,7 @@ function(input, output, session) {
     pillai_df_raw <- reactive({
         req(midpoints_df())
         req(input$vowel_pair %in% names(vowel_pair_map))
-        midpoints_df() %>%
+        midpoints_df() |>
             filter(speaker_id %in% input$speaker_selection,
                    allophone %in% vowel_pair_map[[input$vowel_pair]],
                    !is.na(F1),
@@ -548,7 +555,7 @@ function(input, output, session) {
         vowel_space <- vowel_space_df_for_hull()
         
         # Reference points
-        reference_points <- vowel_space %>%
+        reference_points <- vowel_space |>
             filter(allophone %in% c("BEET", "BOAT", "BOT", "BAT"))
         
         p <- ggplot(pillai_df_raw(), aes(F2_norm, F1_norm, color = allophone))
