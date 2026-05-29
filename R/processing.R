@@ -81,7 +81,8 @@ ooo2_remove_outliers <- function(.df) {
 }
 
 
-
+# Note: ooo3 (normalization) is a reactive observer in server.R rather than a
+# plain function here, since it needs to cache results and respond to user input.
 
 # Depends on the is_stopword column that ooo2 creates.
 ooo4_filter_otherwise_good_data <- function(.df) {
