@@ -13,7 +13,7 @@ Once your data is loaded in (see below), it'll begin to process it in an opinion
 
 Once the data has been processed, you can download it as a new spreadsheet. So even if you don't need the data visualizations, you can at least benefit from the processing portion of Pipeline.
 
-From there, you have a bunch of options to interact with your data. You can subset by speaker, vowel, and phonological environment and toggle between normalization procedures. The plot can be customized to show points, ellipses, means, words, and trajectories. (Note that trajectory plots are a little buggy at the moment.) You can customize elements of the plot like titles, labels, and font sizes and families. And you can download the plot in a variety of formats. 
+From there, you have a bunch of options to interact with your data. You can subset by speaker, vowel, and phonological environment and toggle between normalization procedures. The plot can be customized to show points, ellipses, means, and words. You can customize elements of the plot like titles, labels, and font sizes and families. And you can download the plot in a variety of formats. 
 
 Pipeline also has some rudimentary acoustic analysis. Currently, the focus is on overlap between certain pairs of vowels. Pillai scores are calculated and they are interpreted in light of Stanley & Sneller's ([2023](https://doi.org/10.1121/10.0016757)) threshold given the sample size. I hope to add more statistical analysis soon.
 
@@ -26,7 +26,7 @@ Pipeline is available at [stanley.byu.edu/pipeline](https://stanley.byu.edu/pipe
 Currently, Pipeline supports two kinds of input files. 
 
 1. A file called `formants.csv` produced by [DARLA](http://darla.dartmouth.edu) (Reddy & Stanford [2015](https://doi.org/10.1515/lingvan-2015-0002)).
-1. A file a file with the suffix `_tracks.csv` produced by [new-fave](https://forced-alignment-and-vowel-extraction.github.io/new-fave/) (Fruehwald [2025a](https://forced-alignment-and-vowel-extraction.github.io/new-fave/)).
+1. A file with the suffix `_tracks.csv` produced by [new-fave](https://forced-alignment-and-vowel-extraction.github.io/new-fave/) (Fruehwald [2025a](https://forced-alignment-and-vowel-extraction.github.io/new-fave/)).
 
 Upload either of those files and Pipeline can handle the rest. I don't anticipate adding new data input sources for now.
 
