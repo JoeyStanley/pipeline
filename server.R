@@ -216,8 +216,9 @@ function(input, output, session) {
     
     
     
-    ### 2.1 Normalization ----
-    # Because it's a reactive thing, I'll put it here. 
+    ### 2.1 Normalization (ooo3) ----
+    # Lives here rather than in processing.R because it needs to cache results
+    # per normalization method and respond to user input (see ooo3 note in processing.R).
     observe({
         # Make sure there is data and it's not empty.
         req(full_df())
