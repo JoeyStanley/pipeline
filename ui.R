@@ -276,6 +276,16 @@ fluidPage(
                                                    choices = c("phoneme", "allophone"),
                                                    selected = c("allophone"),
                                                    multiple = FALSE,
+                                                   selectize = TRUE),
+                                       hr(),
+                                       selectInput("color_palette",
+                                                   label = h4("Color palette"),
+                                                   choices = c("Paul Tol" = "tol",
+                                                               "Kelly"    = "kelly",
+                                                               "Glasbey"  = "glasbey",
+                                                               "Alphabet" = "alphabet"),
+                                                   selected = "tol",
+                                                   multiple = FALSE,
                                                    selectize = TRUE)
                                 )
                             )

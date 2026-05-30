@@ -318,6 +318,10 @@ function(input, output, session) {
 
     
     
+    # Named color vector covering every value of the color variable in the full
+    # dataset. Passing this to scale_color_manual() keeps each vowel anchored to
+    # the same color even when only a subset is displayed (persistence mode).
+
     # A function for generating the plot.
     generate_plot <- function() {
         
@@ -418,6 +422,10 @@ function(input, output, session) {
         #                      aes(color = .data[[input$color_variable]], label = .data[[input$label_variable]]),
         #                      size = input$means_size, alpha = input$means_alpha)
         # }
+
+        ### Color scale
+        vis_values <- sort(unique(midpoint_df[[input$color_variable]]))
+        p <- p + scale_color_manual(values = setNames(build_palette(length(vis_values), input$color_palette), vis_values))
 
         ### Final elements
         p <- p +
@@ -572,7 +580,7 @@ function(input, output, session) {
             geom_text(aes(label = word)) +
             stat_ellipse() +
             geom_text(data = group_means, aes(label = allophone), size = 10) +
-            scale_color_ptol() +
+            scale_color_manual(values = build_palette(2, input$color_palette)) +
             scale_x_reverse() +
             scale_y_reverse() +
             theme_minimal() +
