@@ -220,23 +220,27 @@ function(input, output, session) {
     # Lives here rather than in processing.R because it needs to cache results
     # per normalization method and respond to user input (see ooo3 note in processing.R).
     observe({
-        # Make sure there is data and it's not empty.
         req(full_df())
         req(nrow(full_df()) > 0)
-        
-        # Get the normalization methods from the list saved in sociophonetics.R
+
         method <- input$norm_method
-        info   <- norm_methods[[method]]
-        
-        # Only run normalization if we haven't done it before
+
+        # "none" needs no transformation — alias directly to the raw formants.
+        if (method == "n") {
+            full_df(full_df() |> mutate(F1_norm = F1, F2_norm = F2))
+            return()
+        }
+
+        info <- norm_methods[[method]]
+
+        # Only run normalization if we haven't done it before on this dataset.
         if (!method %in% completed_normalizations()) {
             withProgress(message = "Pulling out all the stops", detail = "Step 3: Normalizing…", {
                 full_df(info$fn(full_df()))
             })
             completed_normalizations(c(completed_normalizations(), method))
         }
-        
-        # Create a copy of this new column and call it "norm" for ease of subsequent processing.
+
         full_df(full_df() |>
                     mutate(F1_norm = .data[[paste0("F1", info$suffix)]],
                            F2_norm = .data[[paste0("F2", info$suffix)]]))
