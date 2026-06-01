@@ -267,7 +267,7 @@ fluidPage(
                             fluidRow(
                                 column(12,
                                        checkboxInput("main_reference_points", label = "Show reference points", value = 0),
-                                       checkboxInput("main_vowel_space",      label = "Show vowel space", value = 1),
+                                       checkboxInput("main_vowel_space",      label = "Show vowel space", value = 0),
                                        selectInput("color_variable",
                                                    label = h4("One color per..."),
                                                    choices = c("phoneme", "allophone"),
