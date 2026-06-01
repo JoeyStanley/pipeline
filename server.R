@@ -410,6 +410,38 @@ function(input, output, session) {
                           aes(color = .data[[input$color_variable]], label = .data[[input$label_variable]]),
                           size = input$means_size, alpha = input$means_alpha)
         }
+        if (input$show_ci) {
+            ci_df <- midpoint_df |>
+                summarize(
+                    F1_mean = mean(F1_norm, na.rm = TRUE),
+                    F2_mean = mean(F2_norm, na.rm = TRUE),
+                    F1_se   = sd(F1_norm, na.rm = TRUE) / sqrt(n()),
+                    F2_se   = sd(F2_norm, na.rm = TRUE) / sqrt(n()),
+                    n       = n(),
+                    .by = c(phoneme, allophone)
+                ) |>
+                mutate(
+                    t_crit   = qt(0.975, n - 1),
+                    F1_lower = F1_mean - t_crit * F1_se,
+                    F1_upper = F1_mean + t_crit * F1_se,
+                    F2_lower = F2_mean - t_crit * F2_se,
+                    F2_upper = F2_mean + t_crit * F2_se
+                )
+            p <- p +
+                geom_errorbar(data  = ci_df,
+                              aes(x = F2_mean, y = F1_mean,
+                                  ymin = F1_lower, ymax = F1_upper,
+                                  color = .data[[input$color_variable]]),
+                              orientation = "x",
+                              width = 0, alpha = input$ci_alpha) +
+                geom_errorbar(data = ci_df,
+                              aes(x = F2_mean, y = F1_mean,
+                                  
+                                  xmin = F2_lower, xmax = F2_upper,
+                                  color = .data[[input$color_variable]]),
+                              orientation = "y",
+                              width = 0, alpha = input$ci_alpha)
+        }
         if (input$show_words) {
             p <- p + geom_text(aes(label = word,
                                    color = .data[[input$color_variable]]),
