@@ -106,7 +106,7 @@ fluidPage(
                                                     inline = FALSE,
                                                     width = '100%')
                                 )
-                            )
+                            ),
                         ),
                         
                         
@@ -252,7 +252,11 @@ fluidPage(
                                                               label    = "One ellipse per...",
                                                               choices  = c("phoneme", "allophone"),
                                                               selected = "allophone",
-                                                              multiple = FALSE, selectize = TRUE)
+                                                              multiple = FALSE, selectize = TRUE),
+                                                  numericInput("min_tokens",
+                                                               label = "Min. tokens",
+                                                               value = 10, min = 1, step = 1,
+                                                               width = "100%")
                                               ),
                                               conditionalPanel(
                                                   condition = "input.distribution_type == 'ellipses'",

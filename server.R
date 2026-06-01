@@ -409,13 +409,19 @@ function(input, output, session) {
             p <- p + geom_point(aes(color = .data[[input$color_variable]]),
                                 size = input$points_size, alpha = input$points_alpha)
         }
-        if (input$distribution_type == "ellipses") {
-            p <- p + stat_ellipse(aes(group = .data[[input$ellipse_variable]], color = .data[[input$color_variable]]),
-                                  level = input$ellipses_size/100, alpha = input$ellipses_alpha)
-        }
-        if (input$distribution_type == "kde") {
-            p <- p + stat_density_2d(aes(group = .data[[input$ellipse_variable]], color = .data[[input$color_variable]]),
-                                     bins = input$kde_bins, alpha = input$kde_alpha)
+        if (input$distribution_type %in% c("ellipses", "kde")) {
+            dist_df <- midpoint_df |>
+                filter(n() >= input$min_tokens, .by = all_of(input$ellipse_variable))
+
+            if (input$distribution_type == "ellipses") {
+                p <- p + stat_ellipse(data = dist_df,
+                                      aes(group = .data[[input$ellipse_variable]], color = .data[[input$color_variable]]),
+                                      level = input$ellipses_size/100, alpha = input$ellipses_alpha)
+            } else {
+                p <- p + stat_density_2d(data = dist_df,
+                                         aes(group = .data[[input$ellipse_variable]], color = .data[[input$color_variable]]),
+                                         bins = input$kde_bins, alpha = input$kde_alpha)
+            }
         }
         if (input$centers_type != "none") {
             p <- p +
