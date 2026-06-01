@@ -170,17 +170,17 @@ fluidPage(
                                 column(6,
                                        h3("Vowel Space"),
                                        checkboxInput("main_vowel_space",
-                                                     label = "Show hull", value = FALSE),
+                                                     label = "Hull", value = FALSE),
                                        conditionalPanel(
                                            condition = "input.main_vowel_space",
-                                           sliderInput("hull_alpha", "Hull opacity",
+                                           sliderInput("hull_alpha", "Opacity",
                                                        min = 0, max = 1, value = 1, width = "100%"),
-                                           sliderInput("hull_linewidth", "Hull line width",
+                                           sliderInput("hull_linewidth", "Line width",
                                                        min = 0.1, max = 3, value = 0.5,
                                                        step = 0.1, width = "100%")
                                        ),
                                        checkboxInput("main_reference_points",
-                                                     label = "Show reference points", value = FALSE),
+                                                     label = "Reference points", value = FALSE),
                                        conditionalPanel(
                                            condition = "input.main_reference_points",
                                            sliderInput("ref_size", "Label size",
@@ -194,9 +194,8 @@ fluidPage(
                             hr(),
 
                             fluidRow(
-                                column(12,
-                                       column(6,
-                                              h3("Centers"),
+                                column(6,
+                                       h3("Centers"),
                                               selectInput("centers_type",
                                                           label    = NULL,
                                                           choices  = c("None"    = "none",
@@ -225,10 +224,13 @@ fluidPage(
                                                       checkboxInput(inputId = "show_ci",
                                                                     label   = "95% CI crosshairs",
                                                                     value   = FALSE),
-                                                      sliderInput(inputId = "ci_alpha",
-                                                                  label = "CI opacity",
-                                                                  min = 0, max = 1, value = 0.5,
-                                                                  width = "100%")
+                                                      conditionalPanel(
+                                                          condition = "input.show_ci",
+                                                          sliderInput(inputId = "ci_alpha",
+                                                                      label = "CI opacity",
+                                                                      min = 0, max = 1, value = 0.5,
+                                                                      width = "100%")
+                                                      )
                                                   )
                                               )
                                        ),
@@ -275,7 +277,6 @@ fluidPage(
                                                               step = 1, width = "100%")
                                               )
                                        )
-                                )
                             ),
 
                         ),
