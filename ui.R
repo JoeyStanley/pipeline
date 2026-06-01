@@ -284,60 +284,73 @@ fluidPage(
                         ### Aesthetics ----
                         tabPanel(
                             title = "Aesthetics",
-                            textInput("title",
-                                      label = "Title",
-                                      value = ""),
-                            textInput("subtitle",
-                                      label = "Subtitle",
-                                      value = ""),
+
+                            h4("Labels"),
+                            fluidRow(
+                                column(6, textInput("title",    label = "Title",    value = "")),
+                                column(6, textInput("subtitle", label = "Subtitle", value = ""))
+                            ),
+                            fluidRow(
+                                column(6, textInput("x_label", label = "x-axis", value = "F2")),
+                                column(6, textInput("y_label", label = "y-axis", value = "F1"))
+                            ),
+
+                            hr(),
+                            h4("Typography"),
                             fluidRow(
                                 column(6,
-                                       textInput("x_label",
-                                                 label = "x-axis label",
-                                                 value = "F2")
+                                       sliderInput("base_size", label = "Base font size",
+                                                   min = 0, max = 48, value = 16,
+                                                   step = 1, round = TRUE, width = "100%")
                                 ),
                                 column(6,
-                                       textInput("y_label",
-                                                 label = "y-axis label",
-                                                 value = "F1")
+                                       selectInput("base_family", label = "Font family",
+                                                   choices  = c("Avenir", "Courier", "Helvetica",
+                                                                "Palatino", "Times"),
+                                                   selected = "Avenir",
+                                                   multiple = FALSE, selectize = TRUE)
                                 )
                             ),
+
                             hr(),
-                            sliderInput("base_size",
-                                        label = "Overall font size",
-                                        step = 1,
-                                        min = 0,
-                                        max = 48,
-                                        value = 16,
-                                        round = TRUE),
-                            selectInput("base_family",
-                                        label = h4("Font family"),
-                                        choices = c("Avenir", "Courier", "Helvetica", "Palatino", "Times"),
-                                        selected = c("Avenir"),
-                                        multiple = FALSE,
-                                        selectize = TRUE),
-                            hr(),
-                            checkboxInput("show_legend", label = "Show legend?", value = FALSE),
-                            hr(),
-                            selectInput("color_variable",
-                                        label = h4("One color per..."),
-                                        choices  = c("phoneme", "allophone"),
-                                        selected = "phoneme",
-                                        multiple = FALSE, selectize = TRUE),
-                            selectInput("color_palette",
-                                        label = h4("Color palette"),
-                                        choices  = c("Paul Tol" = "tol",
-                                                     "Kelly"    = "kelly",
-                                                     "Glasbey"  = "glasbey",
-                                                     "Alphabet" = "alphabet"),
-                                        selected = "kelly",
-                                        multiple = FALSE, selectize = TRUE),
-                            hr(),
-                            h4("Plot size"),
+                            h4("Color"),
                             fluidRow(
-                                column(4, numericInput("plot_width_in",  label = "Width (in)",  value = 10, min = 1, max = 20, step = 0.5)),
-                                column(4, numericInput("plot_height_in", label = "Height (in)", value = 7,  min = 1, max = 20, step = 0.5)),
-                                column(4, numericInput("plot_dpi", label = "DPI",
+                                column(6,
+                                       selectInput("color_variable", label = "One color per...",
+                                                   choices  = c("phoneme", "allophone"),
+                                                   selected = "phoneme",
+                                                   multiple = FALSE, selectize = TRUE)
+                                ),
+                                column(6,
+                                       selectInput("color_palette", label = "Palette",
+                                                   choices  = c("Paul Tol" = "tol",
+                                                                "Kelly"    = "kelly",
+                                                                "Glasbey"  = "glasbey",
+                                                                "Alphabet" = "alphabet"),
+                                                   selected = "kelly",
+                                                   multiple = FALSE, selectize = TRUE)
+                                )
+                            ),
+                            checkboxInput("show_legend", label = "Show legend", value = FALSE),
+
+                            hr(),
+                            h4("Theme"),
+                            selectInput("plot_theme", label = NULL,
+                                        choices  = c("Minimal"       = "minimal",
+                                                     "Classic"       = "classic",
+                                                     "Black & white" = "bw",
+                                                     "Void"          = "void"),
+                                        selected = "minimal",
+                                        multiple = FALSE, selectize = FALSE),
+
+                            hr(),
+                            h4("Display size"),
+                            fluidRow(
+                                column(4, numericInput("plot_width_in",  label = "Width (in)",
+                                                       value = 10, min = 1, max = 20, step = 0.5)),
+                                column(4, numericInput("plot_height_in", label = "Height (in)",
+                                                       value = 7,  min = 1, max = 20, step = 0.5)),
+                                column(4, numericInput("plot_dpi",       label = "DPI",
                                                        value = 150, min = 72, max = 300, step = 1))
                             )
                         ),

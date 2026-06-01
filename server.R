@@ -484,7 +484,12 @@ function(input, output, session) {
                  subtitle = if (nzchar(input$subtitle)) input$subtitle else NULL,
                  x = input$x_label,
                  y = input$y_label) +
-            theme_minimal(base_size = input$base_size, base_family = input$base_family) +
+            do.call(switch(input$plot_theme,
+                           minimal = theme_minimal,
+                           classic = theme_classic,
+                           bw      = theme_bw,
+                           void    = theme_void),
+                    list(base_size = input$base_size, base_family = input$base_family)) +
             theme(legend.position = if_else(input$show_legend, "right", "none"))
 
         p
