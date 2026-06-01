@@ -247,6 +247,12 @@ function(input, output, session) {
     })
     
     
+    # Update the grouping selector label to match the active distribution type.
+    observe({
+        label <- if (isTRUE(input$distribution_type == "kde")) "One contour per..." else "One ellipse per..."
+        updateSelectInput(session, "ellipse_variable", label = label)
+    })
+
     ### 2.2 Display data ----
     
     output$show_all_data <- DT::renderDataTable(DT::datatable({
@@ -376,9 +382,9 @@ function(input, output, session) {
         #     labels_df <- summarized_trajectories_df |> 
         #         filter(prop_time == min(prop_time))
         # } else{
+            center_fn <- if (isTRUE(input$centers_type == "medians")) median else mean
             labels_df <- midpoint_df |>
-                # Matches("F[1234]") intentionally catches both raw (F1, F2) and normalized (F1_lm, F2_z, etc.) columns.
-                summarize(across(matches("F\\d_norm"), \(x) mean(x, na.rm = TRUE)), .by = c(phoneme, allophone))
+                summarize(across(matches("F\\d_norm"), \(x) center_fn(x, na.rm = TRUE)), .by = c(phoneme, allophone))
         # }
 
         # Reference points
@@ -391,30 +397,33 @@ function(input, output, session) {
 
         ### Optional elements 
         if (input$main_reference_points) {
-            p <- p + geom_text(data = reference_points, aes(label = allophone), color = "gray20", size = 10)
+            p <- p + geom_text(data = reference_points, aes(label = allophone),
+                               color = "gray20", size = input$ref_size, alpha = input$ref_alpha)
         }
         if (input$main_vowel_space) {
-            p <- p + geom_mark_hull(data = vowel_space, aes(group = 1), color = "gray20")
+            p <- p + geom_mark_hull(data = vowel_space, aes(group = 1),
+                                    color = scales::alpha("gray20", input$hull_alpha),
+                                    linewidth = input$hull_linewidth)
         }
-        if (input$show_points) {
+        if (input$tokens_type == "points") {
             p <- p + geom_point(aes(color = .data[[input$color_variable]]),
                                 size = input$points_size, alpha = input$points_alpha)
         }
-        if (input$show_ellipses) {
+        if (input$distribution_type == "ellipses") {
             p <- p + stat_ellipse(aes(group = .data[[input$ellipse_variable]], color = .data[[input$color_variable]]),
                                   level = input$ellipses_size/100, alpha = input$ellipses_alpha)
         }
-        if (input$show_kde) {
+        if (input$distribution_type == "kde") {
             p <- p + stat_density_2d(aes(group = .data[[input$ellipse_variable]], color = .data[[input$color_variable]]),
                                      bins = input$kde_bins, alpha = input$kde_alpha)
         }
-        if (input$show_means) {
+        if (input$centers_type != "none") {
             p <- p +
                 geom_text(data = labels_df,
                           aes(color = .data[[input$color_variable]], label = .data[[input$label_variable]]),
                           size = input$means_size, alpha = input$means_alpha)
         }
-        if (input$show_ci) {
+        if (input$show_ci && input$centers_type == "means") {
             ci_df <- midpoint_df |>
                 summarize(
                     F1_mean = mean(F1_norm, na.rm = TRUE),
@@ -446,7 +455,7 @@ function(input, output, session) {
                               orientation = "y",
                               width = 0, alpha = input$ci_alpha)
         }
-        if (input$show_words) {
+        if (input$tokens_type == "words") {
             p <- p + geom_text(aes(label = word,
                                    color = .data[[input$color_variable]]),
                                size = input$words_size, alpha = input$words_alpha)
