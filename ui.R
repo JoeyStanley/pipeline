@@ -180,7 +180,34 @@ fluidPage(
                                        )
                                 )
                             ),
-                            
+
+                            hr(),
+
+                            fluidRow(
+                                column(12,
+                                       checkboxInput(inputId = "show_kde",
+                                                     label   = h3("KDE contours"),
+                                                     value   = FALSE),
+                                       column(6,
+                                              sliderInput(inputId = "kde_alpha",
+                                                          label = "Opacity",
+                                                          min = 0,
+                                                          max = 1,
+                                                          value = 0.8,
+                                                          width = "100%")
+                                       ),
+                                       column(6,
+                                              sliderInput(inputId = "kde_bins",
+                                                          label = "Contour lines",
+                                                          min = 2,
+                                                          max = 15,
+                                                          value = 5,
+                                                          step = 1,
+                                                          width = "100%")
+                                       )
+                                )
+                            ),
+
                             hr(),
                             
                             fluidRow(

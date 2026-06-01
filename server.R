@@ -404,6 +404,10 @@ function(input, output, session) {
             p <- p + stat_ellipse(aes(group = .data[[input$ellipse_variable]], color = .data[[input$color_variable]]),
                                   level = input$ellipses_size/100, alpha = input$ellipses_alpha)
         }
+        if (input$show_kde) {
+            p <- p + stat_density_2d(aes(group = .data[[input$ellipse_variable]], color = .data[[input$color_variable]]),
+                                     bins = input$kde_bins, alpha = input$kde_alpha)
+        }
         if (input$show_means) {
             p <- p +
                 geom_text(data = labels_df,
