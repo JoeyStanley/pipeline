@@ -5,7 +5,7 @@ options(shiny.maxRequestSize=100*1024^2)
 function(input, output, session) {
     
     ## Globals ----
-    
+
     full_df <- reactiveVal(NULL)
     loaded_files   <- reactiveVal(character(0))  # tracks file names for the UI list
     

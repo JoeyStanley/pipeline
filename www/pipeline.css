@@ -108,6 +108,188 @@ h3, h4 {
     padding-bottom: 4px;
 }
 
+/* ── Section heads (VoxHumana-style) ──────────────────── */
+/* title | expanding rule | ? button on the far right     */
+.section-head {
+    display:     flex;
+    align-items: center;
+    gap:         10px;
+    margin-bottom: 4px;
+}
+.section-head h3,
+.section-head h4 {
+    margin:        0;
+    border-bottom: none;
+    padding-bottom: 0;
+    white-space:   nowrap;
+}
+.section-rule {
+    flex:       1;
+    height:     1px;
+    background: var(--pipe-gold-light);
+}
+.help-btn {
+    width:        20px;
+    height:       20px;
+    border-radius: 50%;
+    border:       1px solid var(--pipe-brown-light);
+    background:   transparent;
+    color:        var(--pipe-brown-light);
+    font-size:    11px;
+    font-weight:  bold;
+    cursor:       pointer;
+    display:      flex;
+    align-items:  center;
+    justify-content: center;
+    flex-shrink:  0;
+    font-family:  Arial, sans-serif;
+    line-height:  1;
+    transition:   all 0.15s;
+    padding:      0;
+}
+.help-btn:hover {
+    background:   var(--pipe-brown);
+    border-color: var(--pipe-brown);
+    color:        var(--pipe-gold-light);
+}
+.section-hint {
+    font-size:    0.82em;
+    color:        #999;
+    font-style:   italic;
+    margin-top:   0;
+    margin-bottom: 6px;
+}
+
+/* ── Slide-in help drawer ──────────────────────────────── */
+.drawer-overlay {
+    position:       fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:     rgba(30,18,9,0.35);
+    opacity:        0;
+    pointer-events: none;
+    transition:     opacity 0.25s;
+    z-index:        1040;
+}
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+.drawer {
+    position:   fixed;
+    top: 0; right: 0;
+    width:      380px;
+    max-width:  90vw;
+    height:     100%;
+    background: white;
+    border-left: 1px solid var(--pipe-gold-light);
+    box-shadow: -4px 0 24px rgba(74,46,26,0.18);
+    transform:  translateX(100%);
+    transition: transform 0.25s ease;
+    z-index:    1050;
+    display:    flex;
+    flex-direction: column;
+    overflow:   hidden;
+}
+.drawer.open { transform: translateX(0); }
+
+.drawer-header {
+    padding:       14px 18px;
+    border-bottom: 1px solid var(--pipe-gold-light);
+    background:    var(--pipe-cream);
+    display:       flex;
+    align-items:   center;
+    justify-content: space-between;
+    flex-shrink:   0;
+}
+.drawer-title {
+    font-size:      11px;
+    font-weight:    bold;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color:          var(--pipe-brown);
+}
+.drawer-close {
+    width:        22px;
+    height:       22px;
+    border-radius: 50%;
+    border:       1px solid var(--pipe-gold-light);
+    background:   white;
+    color:        var(--pipe-brown-light);
+    font-size:    12px;
+    cursor:       pointer;
+    display:      flex;
+    align-items:  center;
+    justify-content: center;
+    transition:   all 0.15s;
+    font-family:  Arial, sans-serif;
+    padding:      0;
+    line-height:  1;
+}
+.drawer-close:hover {
+    background:   var(--pipe-brown);
+    border-color: var(--pipe-brown);
+    color:        var(--pipe-gold-light);
+}
+.drawer-body {
+    padding:    20px;
+    overflow-y: auto;
+    flex:       1;
+}
+
+/* ── Prose (drawer content) ────────────────────────────── */
+.prose { color: var(--pipe-dark); }
+.prose h2 {
+    font-size:   17px;
+    font-family: Georgia, serif;
+    font-style:  italic;
+    color:       var(--pipe-brown);
+    margin:      0 0 14px;
+    font-weight: normal;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.prose h3 {
+    font-size:      10px;
+    font-weight:    bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color:          var(--pipe-brown);
+    margin:         20px 0 8px;
+    border-bottom:  none;
+    padding-bottom: 0;
+}
+.prose h3:first-child { margin-top: 0; }
+.prose p  { font-size: 12px; color: var(--pipe-brown-mid); margin: 0 0 10px; line-height: 1.75; }
+.prose p:last-child { margin-bottom: 0; }
+.prose ul, .prose ol { font-size: 12px; color: var(--pipe-brown-mid); margin: 0 0 10px 18px; line-height: 1.75; }
+.prose li { margin-bottom: 4px; }
+.prose strong { color: var(--pipe-brown); }
+.prose code {
+    font-family:  monospace;
+    font-size:    11px;
+    background:   var(--pipe-cream);
+    border:       1px solid var(--pipe-gold-light);
+    border-radius: 3px;
+    padding:      1px 5px;
+}
+.cite-block {
+    background:    var(--pipe-cream);
+    border-left:   3px solid var(--pipe-gold-light);
+    border-radius: 0 4px 4px 0;
+    padding:       10px 14px;
+    margin:        8px 0 16px;
+    font-size:     12px;
+    color:         var(--pipe-brown-mid);
+    line-height:   1.8;
+}
+.cite-block strong {
+    display:        block;
+    margin-bottom:  4px;
+    font-size:      10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color:          var(--pipe-brown-light);
+    font-weight:    bold;
+}
+
 /* ── Horizontal rules ──────────────────────────────────── */
 hr {
     border-color: var(--pipe-gold-light);

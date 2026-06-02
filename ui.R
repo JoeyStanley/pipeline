@@ -1,6 +1,9 @@
 fluidPage(
     includeCSS("www/pipeline.css"),
-    
+    tags$head(
+        tags$script(src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js")
+    ),
+
     # Application title
     titlePanel(tagList(
         "Pipeline",
@@ -84,8 +87,15 @@ fluidPage(
                         ### Speaker selection ----
                         tabPanel(
                             title = "Speakers",
+                            div(class = "section-head",
+                                h4("Speaker"),
+                                div(class = "section-rule"),
+                                tags$button(type = "button", class = "help-btn",
+                                            onclick = "openDrawer('speaker')", title = "Help", "?")
+                            ),
+                            p("Select one or more speakers to include in the analysis.", class = "section-hint"),
                             selectInput("speaker_selection",
-                                        label = h4("Speaker"),
+                                        label = NULL,
                                         choices = "no speaker",
                                         multiple = TRUE,
                                         selectize = FALSE,
@@ -99,7 +109,14 @@ fluidPage(
                             title = "Processing",
                             fluidRow(
                                 column(12,
-                                       radioButtons("norm_method", "Normalization method",
+                                       div(class = "section-head",
+                                           h4("Normalization"),
+                                           div(class = "section-rule"),
+                                           tags$button(type = "button", class = "help-btn",
+                                                       onclick = "openDrawer('normalization')", title = "Help", "?")
+                                       ),
+                                       p("Adjust formant values to remove speaker-size differences.", class = "section-hint"),
+                                       radioButtons("norm_method", label = NULL,
                                                     choices = list("none" = "n",
                                                                    "Nearey" = "lm",
                                                                    "Watt & Fabricius" = "wf",
@@ -116,17 +133,31 @@ fluidPage(
                         ### Vowel selection ----
                         tabPanel(
                             title = "Vowels",
+                            div(class = "section-head",
+                                h4("Vowel"),
+                                div(class = "section-rule"),
+                                tags$button(type = "button", class = "help-btn",
+                                            onclick = "openDrawer('vowel')", title = "Help", "?")
+                            ),
+                            p("Select which vowel classes to display.", class = "section-hint"),
                             selectInput("vowels",
-                                        label = h4("Vowel"),
+                                        label = NULL,
                                         choices = c("FLEECE", "KIT", "FACE", "DRESS", "TRAP", "LOT", "THOUGHT", "STRUT", "GOAT", "FOOT", "GOOSE", "PRICE", "MOUTH", "CHOICE", "NURSE"),
                                         selected = c("FLEECE", "KIT", "FACE", "DRESS", "TRAP", "LOT", "THOUGHT", "STRUT", "GOAT", "FOOT", "GOOSE"),
                                         multiple = TRUE,
                                         selectize = FALSE,
                                         size = 16
                             ),
-                            
+
+                            div(class = "section-head",
+                                h4("Environments"),
+                                div(class = "section-rule"),
+                                tags$button(type = "button", class = "help-btn",
+                                            onclick = "openDrawer('environments')", title = "Help", "?")
+                            ),
+                            p("Filter by phonological environment (e.g. prelateral, prenasal).", class = "section-hint"),
                             selectInput("environments",
-                                        label = h4("Environments"),
+                                        label = NULL,
                                         choices = c("prelateral", "prerhotic", "prevelar", "prenasal", "prevelarnasal", "prevoiceless", "post-Y", "postcoronal", "elsewhere"),
                                         selected = c("elsewhere"),
                                         multiple = TRUE,
@@ -145,7 +176,13 @@ fluidPage(
 
                             fluidRow(
                                 column(6,
-                                       h3("Tokens"),
+                                       div(class = "section-head",
+                                           h3("Tokens"),
+                                           div(class = "section-rule"),
+                                           tags$button(type = "button", class = "help-btn",
+                                                       onclick = "openDrawer('tokens')", title = "Help", "?")
+                                       ),
+                                       p("Show individual measurements in the vowel space.", class = "section-hint"),
                                        selectInput("tokens_type",
                                                    label    = NULL,
                                                    choices  = c("None"   = "none",
@@ -171,7 +208,13 @@ fluidPage(
                                        )
                                 ),
                                 column(6,
-                                       h3("Vowel Space"),
+                                       div(class = "section-head",
+                                           h3("Vowel Space"),
+                                           div(class = "section-rule"),
+                                           tags$button(type = "button", class = "help-btn",
+                                                       onclick = "openDrawer('vowel_space')", title = "Help", "?")
+                                       ),
+                                       p("Visualize the overall extent of a speaker's vowel space.", class = "section-hint"),
                                        checkboxInput("main_vowel_space",
                                                      label = "Hull", value = FALSE),
                                        conditionalPanel(
@@ -198,7 +241,13 @@ fluidPage(
 
                             fluidRow(
                                 column(6,
-                                       h3("Centers"),
+                                       div(class = "section-head",
+                                           h3("Centers"),
+                                           div(class = "section-rule"),
+                                           tags$button(type = "button", class = "help-btn",
+                                                       onclick = "openDrawer('centers')", title = "Help", "?")
+                                       ),
+                                       p("Show the central tendency of each vowel class.", class = "section-hint"),
                                               selectInput("centers_type",
                                                           label    = NULL,
                                                           choices  = c("None"    = "none",
@@ -238,7 +287,13 @@ fluidPage(
                                               )
                                        ),
                                        column(6,
-                                              h3("Distribution"),
+                                              div(class = "section-head",
+                                                  h3("Distribution"),
+                                                  div(class = "section-rule"),
+                                                  tags$button(type = "button", class = "help-btn",
+                                                              onclick = "openDrawer('distribution')", title = "Help", "?")
+                                              ),
+                                              p("Show the spread or density of each vowel class.", class = "section-hint"),
                                               selectInput("distribution_type",
                                                           label    = NULL,
                                                           choices  = c("None"         = "none",
@@ -292,7 +347,13 @@ fluidPage(
                         tabPanel(
                             title = "Aesthetics",
 
-                            h4("Labels"),
+                            div(class = "section-head",
+                                h4("Labels"),
+                                div(class = "section-rule"),
+                                tags$button(type = "button", class = "help-btn",
+                                            onclick = "openDrawer('labels')", title = "Help", "?")
+                            ),
+                            p("Add a title, subtitle, and axis labels to the plot.", class = "section-hint"),
                             fluidRow(
                                 column(6, textInput("title",    label = "Title",    value = "")),
                                 column(6, textInput("subtitle", label = "Subtitle", value = ""))
@@ -303,7 +364,13 @@ fluidPage(
                             ),
 
                             hr(),
-                            h4("Typography"),
+                            div(class = "section-head",
+                                h4("Typography"),
+                                div(class = "section-rule"),
+                                tags$button(type = "button", class = "help-btn",
+                                            onclick = "openDrawer('typography')", title = "Help", "?")
+                            ),
+                            p("Set the font size and family used throughout the plot.", class = "section-hint"),
                             fluidRow(
                                 column(6,
                                        sliderInput("base_size", label = "Base font size",
@@ -320,7 +387,13 @@ fluidPage(
                             ),
 
                             hr(),
-                            h4("Color"),
+                            div(class = "section-head",
+                                h4("Color"),
+                                div(class = "section-rule"),
+                                tags$button(type = "button", class = "help-btn",
+                                            onclick = "openDrawer('color')", title = "Help", "?")
+                            ),
+                            p("Choose what variable drives color and which palette to use.", class = "section-hint"),
                             fluidRow(
                                 column(6,
                                        selectInput("color_variable", label = "One color per...",
@@ -341,7 +414,13 @@ fluidPage(
                             checkboxInput("show_legend", label = "Show legend", value = FALSE),
 
                             hr(),
-                            h4("Theme"),
+                            div(class = "section-head",
+                                h4("Theme"),
+                                div(class = "section-rule"),
+                                tags$button(type = "button", class = "help-btn",
+                                            onclick = "openDrawer('theme')", title = "Help", "?")
+                            ),
+                            p("Set the overall visual style of the plot.", class = "section-hint"),
                             selectInput("plot_theme", label = NULL,
                                         choices  = c("Minimal"       = "minimal",
                                                      "Classic"       = "classic",
@@ -351,7 +430,13 @@ fluidPage(
                                         multiple = FALSE, selectize = FALSE),
 
                             hr(),
-                            h4("Display size"),
+                            div(class = "section-head",
+                                h4("Display size"),
+                                div(class = "section-rule"),
+                                tags$button(type = "button", class = "help-btn",
+                                            onclick = "openDrawer('display_size')", title = "Help", "?")
+                            ),
+                            p("Control the rendered dimensions and resolution of the plot.", class = "section-hint"),
                             fluidRow(
                                 column(4, numericInput("plot_width_in",  label = "Width (in)",
                                                        value = 10, min = 1, max = 20, step = 0.5)),
@@ -424,8 +509,15 @@ fluidPage(
                         sidebarPanel(
                             width = 3,
                             
+                            div(class = "section-head",
+                                h4("Vowel pair"),
+                                div(class = "section-rule"),
+                                tags$button(type = "button", class = "help-btn",
+                                            onclick = "openDrawer('vowel_pair')", title = "Help", "?")
+                            ),
+                            p("Choose which pair of vowels to analyze for overlap.", class = "section-hint"),
                             selectInput("vowel_pair",
-                                        label    = h4("Vowel pair"),
+                                        label    = NULL,
                                         choices  = lapply(vowel_pair_groups, names),
                                         selected = "feel-fill",
                                         multiple = FALSE,
@@ -438,7 +530,13 @@ fluidPage(
                             tableOutput("pillai_pairs_summary"),
                             
                             hr(),
-                            h4("Plot options"),
+                            div(class = "section-head",
+                                h4("Plot options"),
+                                div(class = "section-rule"),
+                                tags$button(type = "button", class = "help-btn",
+                                            onclick = "openDrawer('plot_options')", title = "Help", "?")
+                            ),
+                            p("Additional display options for the overlap plot.", class = "section-hint"),
                             checkboxInput("pillai_reference_points", label = "Show reference points", value = 1),
                             checkboxInput("pillai_vowel_space",      label = "Show vowel space", value = 1)
                         ),
@@ -473,7 +571,85 @@ fluidPage(
                 # tabPanel("vowel shifts")
             )
         )
-        
-        
-    )
+
+
+    ), # end tabsetPanel
+
+    # ── Help drawer (Plot tab) ────────────────────────────────────────────────
+    # Overlay dims the page; drawer slides in from the right.
+    # Content is loaded from www/content/help-*.md on first open and cached.
+    div(class = "drawer-overlay", id = "drawer-overlay",
+        onclick = "closeDrawer()"),
+    div(class = "drawer", id = "drawer",
+        div(class = "drawer-header",
+            div(class = "drawer-title", id = "drawer-title"),
+            tags$button(class = "drawer-close", onclick = "closeDrawer()", "✕")
+        ),
+        div(class = "drawer-body prose", id = "drawer-body")
+    ),
+
+    tags$script(HTML('
+      var DRAWER_META = {
+        speaker:      { title: "Speaker",       path: "content/help-speaker.md" },
+        normalization:{ title: "Normalization", path: "content/help-normalization.md" },
+        vowel:        { title: "Vowel",         path: "content/help-vowel.md" },
+        environments: { title: "Environments",  path: "content/help-environments.md" },
+        tokens:       { title: "Tokens",        path: "content/help-tokens.md" },
+        vowel_space:  { title: "Vowel Space",   path: "content/help-vowel-space.md" },
+        centers:      { title: "Centers",       path: "content/help-centers.md" },
+        distribution: { title: "Distribution",  path: "content/help-distribution.md" },
+        labels:       { title: "Labels",        path: "content/help-labels.md" },
+        typography:   { title: "Typography",    path: "content/help-typography.md" },
+        color:        { title: "Color",         path: "content/help-color.md" },
+        theme:        { title: "Theme",         path: "content/help-theme.md" },
+        display_size: { title: "Display Size",  path: "content/help-display-size.md" },
+        vowel_pair:   { title: "Vowel Pair",    path: "content/help-vowel-pair.md" },
+        plot_options: { title: "Plot Options",  path: "content/help-plot-options.md" }
+      };
+
+      var _mdCache = {};
+
+      function renderMd(path) {
+        if (_mdCache[path]) return Promise.resolve(_mdCache[path]);
+        return fetch(path)
+          .then(function(r) {
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            return r.text();
+          })
+          .then(function(txt) {
+            var html = marked.parse(txt);
+            _mdCache[path] = html;
+            return html;
+          });
+      }
+
+      function openDrawer(section) {
+        var meta = DRAWER_META[section];
+        if (!meta) return;
+        document.getElementById("drawer-title").textContent = meta.title;
+        document.getElementById("drawer").classList.add("open");
+        document.getElementById("drawer-overlay").classList.add("open");
+        var body = document.getElementById("drawer-body");
+        if (body.dataset.section === section) return;
+        body.innerHTML = "<p style=\'color:#c4956a;font-style:italic;font-size:12px;\'>Loading…</p>";
+        renderMd(meta.path)
+          .then(function(html) {
+            body.innerHTML = html;
+            body.dataset.section = section;
+          })
+          .catch(function() {
+            body.innerHTML = "<p style=\'color:#8b2020;font-size:12px;\'>Could not load help content.</p>";
+          });
+      }
+
+      function closeDrawer() {
+        document.getElementById("drawer").classList.remove("open");
+        document.getElementById("drawer-overlay").classList.remove("open");
+      }
+
+      document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") closeDrawer();
+      });
+    '))
+
 )
