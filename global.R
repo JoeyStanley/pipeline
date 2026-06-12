@@ -1,6 +1,9 @@
 if (file.exists("renv/activate.R")) {
     source("renv/activate.R")
-    renv::restore(prompt = FALSE)
+    tryCatch(
+        renv::restore(prompt = FALSE),
+        error = function(e) message("renv::restore() failed: ", conditionMessage(e))
+    )
 }
 
 app_version <- paste0("v", read.dcf("DESCRIPTION", fields = "Version")[1])
