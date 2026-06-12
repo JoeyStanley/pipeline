@@ -1,3 +1,9 @@
+if (exists("STARTUP_ERRORS") && length(STARTUP_ERRORS) > 0) {
+fluidPage(
+    titlePanel("Startup diagnostics (temporary)"),
+    tags$pre(paste(STARTUP_ERRORS, collapse = "\n\n"))
+)
+} else {
 fluidPage(
     includeCSS("www/pipeline.css"),
     
@@ -473,7 +479,8 @@ fluidPage(
                 # tabPanel("vowel shifts")
             )
         )
-        
-        
+
+
     )
 )
+}

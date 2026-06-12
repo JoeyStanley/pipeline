@@ -1,38 +1,44 @@
-if (file.exists("renv/activate.R")) {
-    source("renv/activate.R")
+# ── TEMPORARY STARTUP DIAGNOSTICS ──────────────────────────
+# Collects any errors encountered during startup so they can be displayed
+# in the browser (the app can't reach server logs directly).
+STARTUP_ERRORS <- character(0)
+
+safe_step <- function(label, expr) {
     tryCatch(
-        renv::restore(prompt = FALSE),
-        error = function(e) message("renv::restore() failed: ", conditionMessage(e))
+        expr,
+        error = function(e) {
+            STARTUP_ERRORS[[length(STARTUP_ERRORS) + 1]] <<- paste0(label, ": ", conditionMessage(e))
+        }
     )
 }
 
-app_version <- paste0("v", read.dcf("DESCRIPTION", fields = "Version")[1])
+safe_library <- function(pkg) {
+    safe_step(paste0("library(", pkg, ")"),
+              suppressWarnings(suppressMessages(library(pkg, character.only = TRUE))))
+}
+# ────────────────────────────────────────────────────────────
 
-library(shiny)
-library(DT) 
-library(shinycssloaders) # for spiny wheel when loading plot
-library(markdown)
+library(shiny) # needed to render the diagnostics page itself
 
-# Data management 
-library(tidyverse)
-library(janitor)
-library(writexl)
+safe_step("renv", {
+    if (file.exists("renv/activate.R")) {
+        source("renv/activate.R")
+        renv::restore(prompt = FALSE)
+    }
+})
 
-# Data visualizations
-library(ggthemes)
-library(ggforce)
-library(concaveman)
-library(khroma)   # Paul Tol color schemes
-library(pals)     # Kelly, Glasbey, Alphabet palettes
+safe_step("app_version", {
+    app_version <- paste0("v", read.dcf("DESCRIPTION", fields = "Version")[1])
+})
+if (!exists("app_version")) app_version <- "v?"
 
-# Statistics
-library(mgcv)
-library(itsadug)
-
-# Linguistics-specific
-library(stopwords)
-library(joeyr) # remotes::install_github("joeystanley/joeyr")
-library(tidynorm)
+for (pkg in c("DT", "shinycssloaders", "markdown",
+              "tidyverse", "janitor", "writexl",
+              "ggthemes", "ggforce", "concaveman", "khroma", "pals",
+              "mgcv", "itsadug",
+              "stopwords", "joeyr", "tidynorm")) {
+    safe_library(pkg)
+}
 
 
 # ── Theme colors (Tabernacle organ palette) ─────────────
