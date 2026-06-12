@@ -158,6 +158,15 @@ a:hover {
 }
 
 
+/* ── Version badge ─────────────────────────────────────── */
+.app-version {
+    font-size:   0.45em;
+    font-weight: normal;
+    color:       var(--pipe-brown-light);
+    margin-left: 0.75em;
+    vertical-align: middle;
+}
+
 /* ── Pillai score display ──────────────────────────────── */
 .pillai-stat {
     font-size:   2.5rem;

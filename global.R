@@ -3,6 +3,7 @@ if (file.exists("renv/activate.R")) {
     renv::restore(prompt = FALSE)
 }
 
+app_version <- paste0("v", read.dcf("DESCRIPTION", fields = "Version")[1])
 
 library(shiny)
 library(DT) 

@@ -2,7 +2,10 @@ fluidPage(
     includeCSS("www/pipeline.css"),
     
     # Application title
-    titlePanel("Pipeline"),
+    titlePanel(tagList(
+        "Pipeline",
+        tags$small(app_version, class = "app-version")
+    )),
     
     tabsetPanel(
         type = "pills",
@@ -106,7 +109,7 @@ fluidPage(
                                                     inline = FALSE,
                                                     width = '100%')
                                 )
-                            )
+                            ),
                         ),
                         
                         
@@ -139,201 +142,222 @@ fluidPage(
                         ### Plot elements ----
                         tabPanel(
                             title = "Plot",
-                            
-                            fluidRow(
-                                column(12,
-                                       column(6,
-                                              checkboxInput(inputId = "show_points",
-                                                            label   = h3("Points"),
-                                                            value   = TRUE),
-                                              sliderInput(inputId = "points_alpha",
-                                                          label = "Opacity",
-                                                          min = 0,
-                                                          max = 1,
-                                                          value = 1,
-                                                          width="100%"),
-                                              sliderInput(inputId = "points_size",
-                                                          label = "Size",
-                                                          min = 0.01,
-                                                          max = 10,
-                                                          value = 0.25,
-                                                          round = 1,
-                                                          width="100%")
-                                       ),
-                                       column(6,
-                                              checkboxInput(inputId = "show_ellipses",
-                                                            label   = h3("Ellipses"),
-                                                            value   = TRUE),
-                                              sliderInput(inputId = "ellipses_alpha",
-                                                          label = "Opacity",
-                                                          min = 0,
-                                                          max = 1,
-                                                          value = 1,
-                                                          width="100%"),
-                                              sliderInput(inputId = "ellipses_size",
-                                                          label = "Size",
-                                                          min = 1,
-                                                          max = 100,
-                                                          value = 67,
-                                                          post = "%",
-                                                          width="100%")
-                                       )
-                                )
-                            ),
-                            
-                            hr(),
-                            
-                            fluidRow(
-                                column(12,
-                                       column(6,
-                                              checkboxInput(inputId = "show_means",
-                                                            label   = h3("Means"),
-                                                            value   = TRUE),
-                                              sliderInput(inputId = "means_alpha",
-                                                          label = "Opacity",
-                                                          min = 0,
-                                                          max = 1,
-                                                          value = 1,
-                                                          width="100%"),
-                                              sliderInput(inputId = "means_size",
-                                                          label = "Size",
-                                                          min = 2,
-                                                          max = 20,
-                                                          value = 10,
-                                                          width="100%")
-                                       ),
-                                       column(6,
-                                              checkboxInput(inputId = "show_words",
-                                                            label   = h3("Words"),
-                                                            value   = FALSE),
-                                              sliderInput(inputId = "words_alpha",
-                                                          label = "Opacity",
-                                                          min = 0,
-                                                          max = 1,
-                                                          value = 1,
-                                                          width="100%"),
-                                              sliderInput(inputId = "words_size",
-                                                          label = "Size",
-                                                          min = 0.01,
-                                                          max = 10,
-                                                          value = 3,
-                                                          width="100%")
-                                       )
-                                )
-                            ),
-                            
-                            hr(),
-                            
-                            # fluidRow(
-                            #     column(12,
-                            #            checkboxInput(inputId = "show_trajectories",
-                            #                          label   = h3("Trajectories"),
-                            #                          value   = FALSE)
-                            #     ),
-                            #     column(6,
-                            #            sliderInput(inputId = "trajectories_alpha",
-                            #                        label = "Opacity",
-                            #                        min = 0,
-                            #                        max = 1,
-                            #                        value = 1,
-                            #                        width="100%"),
-                            #            sliderInput(inputId = "trajectories_size",
-                            #                        label = "Size",
-                            #                        min = 0.01,
-                            #                        max = 2,
-                            #                        value = 1,
-                            #                        width="100%")
-                            #     ),
-                            #     column(6,
-                            #            selectInput("trajectory_type", 
-                            #                        label = "Trajectory type",
-                            #                        choices = c("raw", "mean", "median", "smoothed"),
-                            #                        selected = "median")
-                            #     )
-                            # ),
-                            
-                            
-                            hr(),
-                            
-                            fluidRow(
-                                column(12,
-                                       checkboxInput("main_reference_points", label = "Show reference points", value = 0),
-                                       checkboxInput("main_vowel_space",      label = "Show vowel space", value = 1),
-                                       selectInput("color_variable",
-                                                   label = h4("One color per..."),
-                                                   choices = c("phoneme", "allophone"),
-                                                   selected = c("phoneme"),
-                                                   multiple = FALSE,
-                                                   selectize = TRUE),
-                                       selectInput("ellipse_variable",
-                                                   label = h4("One ellipse per..."),
-                                                   choices = c("phoneme", "allophone"),
-                                                   selected = c("allophone"),
-                                                   multiple = FALSE,
-                                                   selectize = TRUE),
-                                       selectInput("label_variable",
-                                                   label = h4("One label per..."),
-                                                   choices = c("phoneme", "allophone"),
-                                                   selected = c("allophone"),
-                                                   multiple = FALSE,
-                                                   selectize = TRUE),
-                                       hr(),
-                                       selectInput("color_palette",
-                                                   label = h4("Color palette"),
-                                                   choices = c("Paul Tol" = "tol",
-                                                               "Kelly"    = "kelly",
-                                                               "Glasbey"  = "glasbey",
-                                                               "Alphabet" = "alphabet"),
-                                                   selected = "tol",
-                                                   multiple = FALSE,
-                                                   selectize = TRUE)
-                                )
-                            )
-                        ),
-                        
-                        ### Customize plot ----
-                        tabPanel(
-                            title = "Customize",
-                            textInput("title",
-                                      label = "Title",
-                                      value = ""),
-                            textInput("subtitle",
-                                      label = "Subtitle",
-                                      value = ""),
+
                             fluidRow(
                                 column(6,
-                                       textInput("x_label",
-                                                 label = "x-axis label",
-                                                 value = "F2")
+                                       h3("Tokens"),
+                                       selectInput("tokens_type",
+                                                   label    = NULL,
+                                                   choices  = c("None"   = "none",
+                                                                "Points" = "points",
+                                                                "Words"  = "words"),
+                                                   selected = "points",
+                                                   multiple = FALSE,
+                                                   selectize = FALSE),
+                                       conditionalPanel(
+                                           condition = "input.tokens_type == 'points'",
+                                           sliderInput("points_alpha", "Opacity",
+                                                       min = 0, max = 1, value = 1, width = "100%"),
+                                           sliderInput("points_size", "Size",
+                                                       min = 0.01, max = 10, value = 0.25,
+                                                       round = 1, width = "100%")
+                                       ),
+                                       conditionalPanel(
+                                           condition = "input.tokens_type == 'words'",
+                                           sliderInput("words_alpha", "Opacity",
+                                                       min = 0, max = 1, value = 1, width = "100%"),
+                                           sliderInput("words_size", "Size",
+                                                       min = 0.01, max = 10, value = 3, width = "100%")
+                                       )
                                 ),
                                 column(6,
-                                       textInput("y_label",
-                                                 label = "y-axis label",
-                                                 value = "F1")
+                                       h3("Vowel Space"),
+                                       checkboxInput("main_vowel_space",
+                                                     label = "Hull", value = FALSE),
+                                       conditionalPanel(
+                                           condition = "input.main_vowel_space",
+                                           sliderInput("hull_alpha", "Opacity",
+                                                       min = 0, max = 1, value = 1, width = "100%"),
+                                           sliderInput("hull_linewidth", "Line width",
+                                                       min = 0.1, max = 3, value = 0.5,
+                                                       step = 0.1, width = "100%")
+                                       ),
+                                       checkboxInput("main_reference_points",
+                                                     label = "Reference points", value = FALSE),
+                                       conditionalPanel(
+                                           condition = "input.main_reference_points",
+                                           sliderInput("ref_size", "Label size",
+                                                       min = 2, max = 20, value = 10, width = "100%"),
+                                           sliderInput("ref_alpha", "Opacity",
+                                                       min = 0, max = 1, value = 1, width = "100%")
+                                       )
                                 )
                             ),
+
                             hr(),
-                            sliderInput("base_size",
-                                        label = "Overall font size",
-                                        step = 1,
-                                        min = 0,
-                                        max = 48,
-                                        value = 16,
-                                        round = TRUE),
-                            selectInput("base_family",
-                                        label = h4("Font family"),
-                                        choices = c("Avenir", "Courier", "Helvetica", "Palatino", "Times"),
-                                        selected = c("Avenir"),
-                                        multiple = FALSE,
-                                        selectize = TRUE),
-                            hr(),
-                            checkboxInput("show_legend", label = "Show legend?", value = FALSE),
-                            hr(),
-                            h4("Plot size"),
+
                             fluidRow(
-                                column(4, numericInput("plot_width_in",  label = "Width (in)",  value = 10, min = 1, max = 20, step = 0.5)),
-                                column(4, numericInput("plot_height_in", label = "Height (in)", value = 7,  min = 1, max = 20, step = 0.5)),
-                                column(4, numericInput("plot_dpi", label = "DPI",
+                                column(6,
+                                       h3("Centers"),
+                                              selectInput("centers_type",
+                                                          label    = NULL,
+                                                          choices  = c("None"    = "none",
+                                                                       "Means"   = "means",
+                                                                       "Medians" = "medians"),
+                                                          selected = "means",
+                                                          multiple = FALSE,
+                                                          selectize = FALSE),
+                                              conditionalPanel(
+                                                  condition = "input.centers_type != 'none'",
+                                                  selectInput("label_variable",
+                                                              label    = "One label per...",
+                                                              choices  = c("phoneme", "allophone"),
+                                                              selected = "allophone",
+                                                              multiple = FALSE, selectize = TRUE),
+                                                  sliderInput(inputId = "means_alpha",
+                                                              label = "Opacity",
+                                                              min = 0, max = 1, value = 1,
+                                                              width = "100%"),
+                                                  sliderInput(inputId = "means_size",
+                                                              label = "Size",
+                                                              min = 2, max = 20, value = 10,
+                                                              width = "100%"),
+                                                  conditionalPanel(
+                                                      condition = "input.centers_type == 'means'",
+                                                      checkboxInput(inputId = "show_ci",
+                                                                    label   = "95% CI crosshairs",
+                                                                    value   = FALSE),
+                                                      conditionalPanel(
+                                                          condition = "input.show_ci",
+                                                          sliderInput(inputId = "ci_alpha",
+                                                                      label = "CI opacity",
+                                                                      min = 0, max = 1, value = 0.5,
+                                                                      width = "100%")
+                                                      )
+                                                  )
+                                              )
+                                       ),
+                                       column(6,
+                                              h3("Distribution"),
+                                              selectInput("distribution_type",
+                                                          label    = NULL,
+                                                          choices  = c("None"         = "none",
+                                                                       "Ellipses"     = "ellipses",
+                                                                       "KDE contours" = "kde"),
+                                                          selected = "ellipses",
+                                                          multiple = FALSE,
+                                                          selectize = FALSE),
+                                              # Grouping selector — label updated server-side
+                                              # based on distribution_type
+                                              conditionalPanel(
+                                                  condition = "input.distribution_type != 'none'",
+                                                  selectInput("ellipse_variable",
+                                                              label    = "One ellipse per...",
+                                                              choices  = c("phoneme", "allophone"),
+                                                              selected = "allophone",
+                                                              multiple = FALSE, selectize = TRUE),
+                                                  numericInput("min_tokens",
+                                                               label = "Min. tokens",
+                                                               value = 10, min = 1, step = 1,
+                                                               width = "100%")
+                                              ),
+                                              conditionalPanel(
+                                                  condition = "input.distribution_type == 'ellipses'",
+                                                  sliderInput(inputId = "ellipses_alpha",
+                                                              label = "Opacity",
+                                                              min = 0, max = 1, value = 1,
+                                                              width = "100%"),
+                                                  sliderInput(inputId = "ellipses_size",
+                                                              label = "Size",
+                                                              min = 1, max = 100, value = 67,
+                                                              post = "%", width = "100%")
+                                              ),
+                                              conditionalPanel(
+                                                  condition = "input.distribution_type == 'kde'",
+                                                  sliderInput(inputId = "kde_alpha",
+                                                              label = "Opacity",
+                                                              min = 0, max = 1, value = 0.8,
+                                                              width = "100%"),
+                                                  sliderInput(inputId = "kde_bins",
+                                                              label = "Contour lines",
+                                                              min = 2, max = 15, value = 5,
+                                                              step = 1, width = "100%")
+                                              )
+                                       )
+                            ),
+
+                        ),
+                        
+                        ### Aesthetics ----
+                        tabPanel(
+                            title = "Aesthetics",
+
+                            h4("Labels"),
+                            fluidRow(
+                                column(6, textInput("title",    label = "Title",    value = "")),
+                                column(6, textInput("subtitle", label = "Subtitle", value = ""))
+                            ),
+                            fluidRow(
+                                column(6, textInput("x_label", label = "x-axis", value = "F2")),
+                                column(6, textInput("y_label", label = "y-axis", value = "F1"))
+                            ),
+
+                            hr(),
+                            h4("Typography"),
+                            fluidRow(
+                                column(6,
+                                       sliderInput("base_size", label = "Base font size",
+                                                   min = 0, max = 48, value = 16,
+                                                   step = 1, round = TRUE, width = "100%")
+                                ),
+                                column(6,
+                                       selectInput("base_family", label = "Font family",
+                                                   choices  = c("Avenir", "Courier", "Helvetica",
+                                                                "Palatino", "Times"),
+                                                   selected = "Avenir",
+                                                   multiple = FALSE, selectize = TRUE)
+                                )
+                            ),
+
+                            hr(),
+                            h4("Color"),
+                            fluidRow(
+                                column(6,
+                                       selectInput("color_variable", label = "One color per...",
+                                                   choices  = c("phoneme", "allophone"),
+                                                   selected = "phoneme",
+                                                   multiple = FALSE, selectize = TRUE)
+                                ),
+                                column(6,
+                                       selectInput("color_palette", label = "Palette",
+                                                   choices  = c("Paul Tol" = "tol",
+                                                                "Kelly"    = "kelly",
+                                                                "Glasbey"  = "glasbey",
+                                                                "Alphabet" = "alphabet"),
+                                                   selected = "kelly",
+                                                   multiple = FALSE, selectize = TRUE)
+                                )
+                            ),
+                            checkboxInput("show_legend", label = "Show legend", value = FALSE),
+
+                            hr(),
+                            h4("Theme"),
+                            selectInput("plot_theme", label = NULL,
+                                        choices  = c("Minimal"       = "minimal",
+                                                     "Classic"       = "classic",
+                                                     "Black & white" = "bw",
+                                                     "Void"          = "void"),
+                                        selected = "minimal",
+                                        multiple = FALSE, selectize = FALSE),
+
+                            hr(),
+                            h4("Display size"),
+                            fluidRow(
+                                column(4, numericInput("plot_width_in",  label = "Width (in)",
+                                                       value = 10, min = 1, max = 20, step = 0.5)),
+                                column(4, numericInput("plot_height_in", label = "Height (in)",
+                                                       value = 7,  min = 1, max = 20, step = 0.5)),
+                                column(4, numericInput("plot_dpi",       label = "DPI",
                                                        value = 150, min = 72, max = 300, step = 1))
                             )
                         ),
