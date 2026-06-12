@@ -20,11 +20,12 @@ safe_library <- function(pkg) {
 
 library(shiny) # needed to render the diagnostics page itself
 
-safe_step("renv", {
-    if (file.exists("renv/activate.R")) {
-        source("renv/activate.R")
-    }
-})
+# renv activation TEMPORARILY DISABLED while debugging server startup failures.
+# safe_step("renv", {
+#     if (file.exists("renv/activate.R")) {
+#         source("renv/activate.R")
+#     }
+# })
 
 safe_step("app_version", {
     app_version <- paste0("v", read.dcf("DESCRIPTION", fields = "Version")[1])

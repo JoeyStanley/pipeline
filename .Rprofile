@@ -1,5 +1,6 @@
-if (file.exists("renv/activate.R")) {
-    tryCatch(source("renv/activate.R"), error = function(e) {
-        message("renv/activate.R failed: ", conditionMessage(e))
-    })
-}
+# TEMPORARILY DISABLED while debugging server startup failures.
+# if (file.exists("renv/activate.R")) {
+#     tryCatch(source("renv/activate.R"), error = function(e) {
+#         message("renv/activate.R failed: ", conditionMessage(e))
+#     })
+# }
