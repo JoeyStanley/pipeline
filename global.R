@@ -23,7 +23,6 @@ library(shiny) # needed to render the diagnostics page itself
 safe_step("renv", {
     if (file.exists("renv/activate.R")) {
         source("renv/activate.R")
-        renv::restore(prompt = FALSE)
     }
 })
 
