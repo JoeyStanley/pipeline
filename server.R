@@ -220,29 +220,39 @@ function(input, output, session) {
     # Lives here rather than in processing.R because it needs to cache results
     # per normalization method and respond to user input (see ooo3 note in processing.R).
     observe({
-        # Make sure there is data and it's not empty.
         req(full_df())
         req(nrow(full_df()) > 0)
-        
-        # Get the normalization methods from the list saved in sociophonetics.R
+
         method <- input$norm_method
-        info   <- norm_methods[[method]]
-        
-        # Only run normalization if we haven't done it before
+
+        # "none" needs no transformation — alias directly to the raw formants.
+        if (method == "n") {
+            full_df(full_df() |> mutate(F1_norm = F1, F2_norm = F2))
+            return()
+        }
+
+        info <- norm_methods[[method]]
+
+        # Only run normalization if we haven't done it before on this dataset.
         if (!method %in% completed_normalizations()) {
             withProgress(message = "Pulling out all the stops", detail = "Step 3: Normalizing…", {
                 full_df(info$fn(full_df()))
             })
             completed_normalizations(c(completed_normalizations(), method))
         }
-        
-        # Create a copy of this new column and call it "norm" for ease of subsequent processing.
+
         full_df(full_df() |>
                     mutate(F1_norm = .data[[paste0("F1", info$suffix)]],
                            F2_norm = .data[[paste0("F2", info$suffix)]]))
     })
     
     
+    # Update the grouping selector label to match the active distribution type.
+    observe({
+        label <- if (isTRUE(input$distribution_type == "kde")) "One contour per..." else "One ellipse per..."
+        updateSelectInput(session, "ellipse_variable", label = label)
+    })
+
     ### 2.2 Display data ----
     
     output$show_all_data <- DT::renderDataTable(DT::datatable({
@@ -372,9 +382,9 @@ function(input, output, session) {
         #     labels_df <- summarized_trajectories_df |> 
         #         filter(prop_time == min(prop_time))
         # } else{
+            center_fn <- if (isTRUE(input$centers_type == "medians")) median else mean
             labels_df <- midpoint_df |>
-                # Matches("F[1234]") intentionally catches both raw (F1, F2) and normalized (F1_lm, F2_z, etc.) columns.
-                summarize(across(matches("F\\d_norm"), \(x) mean(x, na.rm = TRUE)), .by = c(phoneme, allophone))
+                summarize(across(matches("F\\d_norm"), \(x) center_fn(x, na.rm = TRUE)), .by = c(phoneme, allophone))
         # }
 
         # Reference points
@@ -387,26 +397,71 @@ function(input, output, session) {
 
         ### Optional elements 
         if (input$main_reference_points) {
-            p <- p + geom_text(data = reference_points, aes(label = allophone), color = "gray20", size = 10)
+            p <- p + geom_text(data = reference_points, aes(label = allophone),
+                               color = "gray20", size = input$ref_size, alpha = input$ref_alpha)
         }
         if (input$main_vowel_space) {
-            p <- p + geom_mark_hull(data = vowel_space, aes(group = 1), color = "gray20")
+            p <- p + geom_mark_hull(data = vowel_space, aes(group = 1),
+                                    color = scales::alpha("gray20", input$hull_alpha),
+                                    linewidth = input$hull_linewidth)
         }
-        if (input$show_points) {
+        if (input$tokens_type == "points") {
             p <- p + geom_point(aes(color = .data[[input$color_variable]]),
                                 size = input$points_size, alpha = input$points_alpha)
         }
-        if (input$show_ellipses) {
-            p <- p + stat_ellipse(aes(group = .data[[input$ellipse_variable]], color = .data[[input$color_variable]]),
-                                  level = input$ellipses_size/100, alpha = input$ellipses_alpha)
+        if (input$distribution_type %in% c("ellipses", "kde")) {
+            dist_df <- midpoint_df |>
+                filter(n() >= input$min_tokens, .by = all_of(input$ellipse_variable))
+
+            if (input$distribution_type == "ellipses") {
+                p <- p + stat_ellipse(data = dist_df,
+                                      aes(group = .data[[input$ellipse_variable]], color = .data[[input$color_variable]]),
+                                      level = input$ellipses_size/100, alpha = input$ellipses_alpha)
+            } else {
+                p <- p + stat_density_2d(data = dist_df,
+                                         aes(group = .data[[input$ellipse_variable]], color = .data[[input$color_variable]]),
+                                         bins = input$kde_bins, alpha = input$kde_alpha)
+            }
         }
-        if (input$show_means) {
+        if (input$centers_type != "none") {
             p <- p +
                 geom_text(data = labels_df,
                           aes(color = .data[[input$color_variable]], label = .data[[input$label_variable]]),
                           size = input$means_size, alpha = input$means_alpha)
         }
-        if (input$show_words) {
+        if (input$show_ci && input$centers_type == "means") {
+            ci_df <- midpoint_df |>
+                summarize(
+                    F1_mean = mean(F1_norm, na.rm = TRUE),
+                    F2_mean = mean(F2_norm, na.rm = TRUE),
+                    F1_se   = sd(F1_norm, na.rm = TRUE) / sqrt(n()),
+                    F2_se   = sd(F2_norm, na.rm = TRUE) / sqrt(n()),
+                    n       = n(),
+                    .by = c(phoneme, allophone)
+                ) |>
+                mutate(
+                    t_crit   = qt(0.975, n - 1),
+                    F1_lower = F1_mean - t_crit * F1_se,
+                    F1_upper = F1_mean + t_crit * F1_se,
+                    F2_lower = F2_mean - t_crit * F2_se,
+                    F2_upper = F2_mean + t_crit * F2_se
+                )
+            p <- p +
+                geom_errorbar(data  = ci_df,
+                              aes(x = F2_mean, y = F1_mean,
+                                  ymin = F1_lower, ymax = F1_upper,
+                                  color = .data[[input$color_variable]]),
+                              orientation = "x",
+                              width = 0, alpha = input$ci_alpha) +
+                geom_errorbar(data = ci_df,
+                              aes(x = F2_mean, y = F1_mean,
+                                  
+                                  xmin = F2_lower, xmax = F2_upper,
+                                  color = .data[[input$color_variable]]),
+                              orientation = "y",
+                              width = 0, alpha = input$ci_alpha)
+        }
+        if (input$tokens_type == "words") {
             p <- p + geom_text(aes(label = word,
                                    color = .data[[input$color_variable]]),
                                size = input$words_size, alpha = input$words_alpha)
@@ -435,7 +490,12 @@ function(input, output, session) {
                  subtitle = if (nzchar(input$subtitle)) input$subtitle else NULL,
                  x = input$x_label,
                  y = input$y_label) +
-            theme_minimal(base_size = input$base_size, base_family = input$base_family) +
+            do.call(switch(input$plot_theme,
+                           minimal = theme_minimal,
+                           classic = theme_classic,
+                           bw      = theme_bw,
+                           void    = theme_void),
+                    list(base_size = input$base_size, base_family = input$base_family)) +
             theme(legend.position = if_else(input$show_legend, "right", "none"))
 
         p
