@@ -22,7 +22,7 @@ A log-scale transformation that centers each speaker's formants around their own
 
 Projects each speaker's vowels relative to a triangle defined by their F1/F2 means for /i, u, a/. 
 
-> **Cite as:** Watt, D., & Fabricius, A. (2002). Evaluation of a technique for improving the mapping of multiple speakers' vowel spaces in the F1–F2 plane. *Leeds Working Papers in Linguistics and Phonetics, 9*, 159--173.
+> **Cite as:** Watt, D., & Fabricius, A. (2002). Evaluation of a technique for improving the mapping of multiple speakers' vowel spaces in the F1–F2 plane. *Leeds Working Papers in Linguistics and Phonetics, 9*, 159–173.
 
 ### ΔF (delta-F)
 
@@ -34,7 +34,7 @@ Estimates wvocal tract length from formants and uses it to scale all formant val
 
 Standardizes each speaker's F1 and F2 independently using their own mean and standard deviation. Widely used but can distort the relative positions of vowels within a speaker's system.
 
-> **Cite as:** Lobanov, Boris (1971). "Classification of Russian Vowels Spoken by Different Listeners." *Journal of the Acoustical Society of America* 49: 606--8. <https://doi.org/10.1121/1.1912396>.
+> **Cite as:** Lobanov, Boris (1971). "Classification of Russian Vowels Spoken by Different Listeners." *Journal of the Acoustical Society of America* 49: 606–8. <https://doi.org/10.1121/1.1912396>.
 
 
 ## Meta-Analyses of Normalization
