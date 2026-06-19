@@ -262,6 +262,8 @@ h3, h4 {
 .prose ul, .prose ol { font-size: 12px; color: var(--pipe-brown-mid); margin: 0 0 10px 18px; line-height: 1.75; }
 .prose li { margin-bottom: 4px; }
 .prose strong { color: var(--pipe-brown); }
+.prose a { color: var(--pipe-gold); text-decoration: underline; }
+.prose a:hover { color: var(--pipe-brown-light); }
 .prose code {
     font-family:  monospace;
     font-size:    11px;
