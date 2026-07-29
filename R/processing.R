@@ -16,8 +16,10 @@ prep_darla_data <- function(.df) {
         
         # light processing
         mutate(word = tolower(word),
-               token_id = as.character(token_id)) |>
-        rename_with(str_to_title, matches("f\\d")) |> 
+               # Prefix with source_file: vowel_id alone is only unique within a single
+               # upload, and collides if the same speaker appears across multiple uploads.
+               token_id = paste(source_file, token_id, sep = "_")) |>
+        rename_with(str_to_title, matches("f\\d")) |>
         manually_reclassify_some_words() |> 
         
         
@@ -33,19 +35,26 @@ prep_darla_data <- function(.df) {
 }
 
 prep_newfave_data <- function(.df) {
-    .df |> 
+    .df |>
         # Get the columns I want with the names I want in the order I want
-        clean_names() |> 
+        clean_names() |>
+        # new-fave's own `id` column is only unique within a single source recording,
+        # so it can't be trusted directly as a token identifier: files combining many
+        # speakers/tasks into one CSV reset it, causing unrelated tokens to collide.
+        rowid_to_column("vowel_id") |>
         select(source_file, speaker_id = file_name, word,
-               token_id = id, pre_seg, fol_seg, stress, label, time, duration = dur, prop_time, F1 = f1, F2 = f2, F3 = f3) |>
-        
+               token_id = vowel_id, pre_seg, fol_seg, stress, label, time, duration = dur, prop_time, F1 = f1, F2 = f2, F3 = f3) |>
+
         # Fix transcriptions
-        fave_to_wells() |> 
-        select(-label) |> 
-        
+        fave_to_wells() |>
+        select(-label) |>
+
         # light processing
         mutate(word = tolower(word),
-               across(c(time, duration, F1:F3, prop_time), ~round(., 4))) |> 
+               # Prefix with source_file: vowel_id alone is only unique within a single
+               # upload, and collides if the same speaker appears across multiple uploads.
+               token_id = paste(source_file, token_id, sep = "_"),
+               across(c(time, duration, F1:F3, prop_time), ~round(., 4))) |>
         manually_reclassify_some_words()
 }
 

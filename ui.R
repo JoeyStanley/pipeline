@@ -93,7 +93,7 @@ fluidPage(
                                 tags$button(type = "button", class = "help-btn",
                                             onclick = "openDrawer('speaker')", title = "Help", "?")
                             ),
-                            p("Select one or more speakers to include in the analysis.", class = "section-hint"),
+                            p("Select one or more speakers to display and analyze.", class = "section-hint"),
                             selectInput("speaker_selection",
                                         label = NULL,
                                         choices = "no speaker",
