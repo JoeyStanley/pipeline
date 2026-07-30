@@ -189,25 +189,45 @@ function(input, output, session) {
     
     
     ## 2. Data processing ----
-    
-    ### 2.0 Subsets -----
-    
-    # Create just a midpoints df.
-    midpoints_df <- reactive({ 
-        req(full_df())
-        
-        full_df() |> 
-            ooo4_filter_otherwise_good_data() |>
-            filter(prop_time > 0.4,
-                   prop_time < 0.6) |>
 
-            # Matches("F[1234]") intentionally catches both raw (F1, F2) and normalized (F1_lm, F2_z, etc.) columns.
-            # Midpoints are computed for all of them.
-            summarize(across(matches("F[1234]"), \(x) mean(x, na.rm = TRUE)),
-                      # `.by` uses negative selection to "group by everything except time and formant columns",
-                      # i.e. collapse prop_time into a single row per token.
-                      # All I need is token_id, and the rest are "passed on" so that they're available for later processing.
-                      .by = -c(prop_time, time, matches("F\\d")))
+    ### 2.0 Subsets -----
+
+    # Identify whether the loaded data is a points df (one row per token) or a
+    # tracks df (multiple rows per token). Shared by midpoints_df (to know whether
+    # to collapse trajectories to midpoints) and the normalization observer (to
+    # pick the DCT-based norm_track_* functions vs. the plain norm_* functions).
+    is_track_data <- reactive({
+        req(full_df())
+        med_rows_per_id <- full_df() |>
+            count(token_id) |>
+            pull(n) |>
+            median()
+        med_rows_per_id > 1
+    })
+
+    # Create just a midpoints df.
+    midpoints_df <- reactive({
+        req(full_df())
+
+        # Tracks have >1 row per ID
+        if (is_track_data()) {
+            full_df() |> 
+                ooo4_filter_otherwise_good_data() |>
+                filter(prop_time > 0.4,
+                       prop_time < 0.6) |>
+                
+                # Matches("F[1234]") intentionally catches both raw (F1, F2) and normalized (F1_lm, F2_z, etc.) columns.
+                # Midpoints are computed for all of them.
+                summarize(across(matches("F[1234]"), \(x) mean(x, na.rm = TRUE)),
+                          # `.by` uses negative selection to "group by everything except time and formant columns",
+                          # i.e. collapse prop_time into a single row per token.
+                          # All I need is id, and the rest are "passed on" so that they're available for later processing.
+                          .by = -c(prop_time, time, matches("F\\d")))
+            
+        } else {
+            full_df() |> 
+                ooo4_filter_otherwise_good_data()
+        }
     })
     
     # Create a trajectory df. Same as the normed df, but here for clarity.
@@ -232,11 +252,12 @@ function(input, output, session) {
         }
 
         info <- norm_methods[[method]]
+        norm_fn <- if (is_track_data()) info$track_fn else info$point_fn
 
         # Only run normalization if we haven't done it before on this dataset.
         if (!method %in% completed_normalizations()) {
             withProgress(message = "Pulling out all the stops", detail = "Step 3: Normalizing…", {
-                full_df(info$fn(full_df()))
+                full_df(norm_fn(full_df()))
             })
             completed_normalizations(c(completed_normalizations(), method))
         }
