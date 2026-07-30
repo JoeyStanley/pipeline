@@ -1,4 +1,27 @@
 
+# Originally part of the Idaho analysis, but I'm going to need this to seamlessly integrate from VoxHumana.
+# Takes preliquid codes (e.g. "iyL") and properly turns them back into standard notation.
+process_preliquids <- function(.df) {
+    .df |> 
+        
+        # First, fix the false positives because they're across word boundaries.
+        mutate(#context = if_else(fol_seg %in% c("L", "R"), "final", context), # turns out I don't keep the context column
+               fol_seg = if_else(fol_seg %in% c("L", "R"), "#",     fol_seg)) |> 
+        
+        # Add a new column to separate out intervocalic laterals (not needed for Pipeline)
+        # mutate(is_intervocalic = str_detect(fol_seg, "[a-z@ʌ]"), # <- vowels are always lowercase
+        #        fol_seg2 = if_else(str_detect(label, "[LR]"), fol_seg, NA), 
+        #        .after = fol_seg) |> 
+        
+        # Retag following segments
+        mutate(fol_seg = case_when(str_detect(label, "\\A[a-z@ʌ]{1,2}L\\Z") ~ "L",
+                                   str_detect(label, "\\A[a-z@ʌ]{1,2}R\\Z") ~ "R",
+                                   TRUE ~ fol_seg)) |> 
+        # Remove the liquids
+        mutate(label = str_remove(label, "(?<=[a-z@ʌ]{1,2})[RL]\\Z"))
+    
+}
+
 
 # This is the first processing once a raw DARLA file comes in.
 prep_darla_data <- function(.df) {
@@ -6,9 +29,9 @@ prep_darla_data <- function(.df) {
         
         # Get the columns I want with the names I want in the order I want
         clean_names() |> 
-        rowid_to_column("vowel_id") |> 
+        rowid_to_column("id") |> 
         select(source_file, speaker_id = name, word, 
-               token_id = vowel_id, pre_seg, fol_seg, stress, phoneme = vowel, time = t, duration = dur, 
+               token_id = id, pre_seg, fol_seg, stress, phoneme = vowel, time = t, duration = dur, 
                matches("F[12]_\\d")) |> 
         
         # Fix transcriptions
@@ -16,7 +39,7 @@ prep_darla_data <- function(.df) {
         
         # light processing
         mutate(word = tolower(word),
-               # Prefix with source_file: vowel_id alone is only unique within a single
+               # Prefix with source_file: id alone is only unique within a single
                # upload, and collides if the same speaker appears across multiple uploads.
                token_id = paste(source_file, token_id, sep = "_")) |>
         rename_with(str_to_title, matches("f\\d")) |>
@@ -38,22 +61,23 @@ prep_newfave_data <- function(.df) {
     .df |>
         # Get the columns I want with the names I want in the order I want
         clean_names() |>
+        
         # new-fave's own `id` column is only unique within a single source recording,
         # so it can't be trusted directly as a token identifier: files combining many
         # speakers/tasks into one CSV reset it, causing unrelated tokens to collide.
-        rowid_to_column("vowel_id") |>
         select(source_file, speaker_id = file_name, word,
-               token_id = vowel_id, pre_seg, fol_seg, stress, label, time, duration = dur, prop_time, F1 = f1, F2 = f2, F3 = f3) |>
+               id, pre_seg, fol_seg, stress, label, time, duration = dur, prop_time, F1 = f1, F2 = f2, F3 = f3) |>
 
         # Fix transcriptions
-        fave_to_wells() |>
+        process_preliquids() |>
+        fave_to_wells() |> 
         select(-label) |>
 
         # light processing
         mutate(word = tolower(word),
-               # Prefix with source_file: vowel_id alone is only unique within a single
+               # Prefix with source_file: id alone is only unique within a single
                # upload, and collides if the same speaker appears across multiple uploads.
-               token_id = paste(source_file, token_id, sep = "_"),
+               token_id = paste(source_file, id, sep = "_"),
                across(c(time, duration, F1:F3, prop_time), ~round(., 4))) |>
         manually_reclassify_some_words()
 }
