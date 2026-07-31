@@ -1,6 +1,5 @@
 if (file.exists("renv/activate.R")) {
     source("renv/activate.R")
-    renv::restore(prompt = FALSE)
 }
 
 app_version <- if (file.exists("DESCRIPTION")) {
