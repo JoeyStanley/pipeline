@@ -1,5 +1,6 @@
 if (file.exists("renv/activate.R")) {
     source("renv/activate.R")
+    renv::install("joeystanley/joeyr", prompt = FALSE, rebuild = TRUE)
 }
 
 app_version <- if (file.exists("DESCRIPTION")) {
