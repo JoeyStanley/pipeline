@@ -2684,6 +2684,7 @@
       "URL": "https://joeystanley.github.io/joeyr/, https://github.com/JoeyStanley/joeyr/",
       "License": "MIT + file LICENSE",
       "Encoding": "UTF-8",
+      "LazyData": "true",
       "RoxygenNote": "7.3.2",
       "Imports": [
         "dplyr (>= 1.0.0)",
@@ -2691,18 +2692,14 @@
         "stringr",
         "ggplot2 (>= 3.0.0)"
       ],
-      "Remotes": "joeystanley/joeysvowels",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "joeyr",
-      "RemoteUsername": "joeystanley",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "47ccf356a261779f20056154c466699c9266e5f5",
-      "NeedsCompilation": "no",
       "Author": "Joseph A. Stanley [aut, cre] (ORCID: <https://orcid.org/0000-0002-9185-0048>)",
-      "Depends": [
-        "R (>= 4.1.0)"
-      ]
+      "RemoteType": "github",
+      "Remotes": "joeystanley/joeysvowels",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "joeystanley",
+      "RemoteRepo": "joeyr",
+      "RemoteRef": "master",
+      "RemoteSha": "47ccf356a261779f20056154c466699c9266e5f5"
     },
     "jquerylib": {
       "Package": "jquerylib",
