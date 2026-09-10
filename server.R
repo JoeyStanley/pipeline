@@ -7,7 +7,7 @@ function(input, output, session) {
     ## Globals ----
 
     full_df <- reactiveVal(NULL)
-    loaded_files   <- reactiveVal(character(0))  # tracks file names for the UI list
+    loaded_files <- reactiveVal(character(0))  # tracks file names for the UI list
     
     # Keep track of which normalizations have been done on this dataset. (Updates when dataset changes.)
     completed_normalizations <- reactiveVal(character(0))
@@ -83,6 +83,13 @@ function(input, output, session) {
                                  # keep source file to allow for removing later on
                                  mutate(source_file = this_file_name) 
                              
+                             # new-fave's _tracks.csv carries a smooth_method column that neither
+                             # _points.csv nor DARLA data has. Check the raw upload (before prep_*
+                             # strips columns down) so trajectory-eligibility reflects what the file
+                             # actually is, not just which radio button was clicked or its row shape
+                             # (DARLA's percent-interpolated data also ends up with >1 row per token).
+                             has_tracks_signature <- "smooth_method" %in% names(raw)
+
                              # Prep data according to data source.
                              incProgress(1/4, detail = "Prepping data…")
                              cleaned <- if (input$data_source == "new-fave") {
@@ -90,7 +97,10 @@ function(input, output, session) {
                              } else {
                                  prep_darla_data(raw)
                              }
-                             
+                             # Record how this batch was uploaded, and whether it's genuine tracks data.
+                             cleaned <- cleaned |> mutate(upload_source    = input$data_source,
+                                                          is_tracks_upload = has_tracks_signature)
+
                              incProgress(1/4, message = "Pulling out all the stops", detail = "Step 1: Coding allophones…")
                              ooo1 <- ooo1_code_allophones(cleaned)
                              
@@ -205,6 +215,16 @@ function(input, output, session) {
         med_rows_per_id > 1
     })
 
+    # Whether full_df() contains real frame-by-frame trajectory data, for
+    # gating the Trajectories tab. See is_tracks_upload, tagged at upload time
+    # from the presence of the smooth_method column — unlike is_track_data(),
+    # this isn't fooled by DARLA's percent-interpolated data, which also ends
+    # up with >1 row per token after prep_darla_data()'s pivot.
+    has_track_data <- reactive({
+        if (is.null(full_df())) return(FALSE)
+        isTRUE(any(full_df()$is_tracks_upload))
+    })
+
     # Create just a midpoints df.
     midpoints_df <- reactive({
         req(full_df())
@@ -230,9 +250,26 @@ function(input, output, session) {
         }
     })
     
-    # Create a trajectory df. Same as the normed df, but here for clarity.
-    # TODO: Trajectories
-    # trajectories_df <- reactive({ full_df() |>  ooo4_filter_otherwise_good_data() })
+    # Create a trajectory df. 
+    trajectories_df <- reactive({
+        req(full_df())
+        
+        # Tracks have >1 row per ID
+        if (is_track_data()) {
+            full_df() |>
+                ooo4_filter_otherwise_good_data() |>
+                # TODO: Custom slider for normalized time to include
+                # filter(prop_time > 0.4,
+                #        prop_time < 0.6) |>
+
+                # Matches("F[1234]") intentionally catches both raw (F1, F2) and normalized (F1_lm, F2_z, etc.) columns.
+                # Midpoints are computed for all of them.
+                summarize(across(matches("F[1234]"), \(x) mean(x, na.rm = TRUE)))
+        } else {
+            full_df() |>
+                ooo4_filter_otherwise_good_data()
+        }
+    })
     
     
     
@@ -312,7 +349,7 @@ function(input, output, session) {
         content = function(file) {
             req(full_df()) # require some data to prevent crashing
             ggsave(file,
-                   plot   = generate_plot(),
+                   plot   = generate_midpoints_plot(),
                    height = input$fig_height,
                    width  = input$fig_width,
                    dpi    = input$fig_dpi,
@@ -321,7 +358,7 @@ function(input, output, session) {
     )
 
 
-    ## 3. Main plot ----
+    ## 3. Midpoints plot ----
     
     midpoint_df_to_plot <- reactive({
         req(midpoints_df())
@@ -354,7 +391,7 @@ function(input, output, session) {
     # the same color even when only a subset is displayed (persistence mode).
 
     # A function for generating the plot.
-    generate_plot <- function() {
+    generate_midpoints_plot <- function() {
         
         # Security checks
         req(midpoint_df_to_plot())
@@ -487,7 +524,7 @@ function(input, output, session) {
                                    color = .data[[input$color_variable]]),
                                size = input$words_size, alpha = input$words_alpha)
         }
-        # TODO: Trajectories
+        # TODO: Trajectories overlaid (maybe I don't want this)
         # if (input$show_trajectories) {
         #     p <- p + geom_path(data = summarized_trajectories_df, 
         #                        aes(group = plotting_group, color = .data[[input$color_variable]]),
@@ -526,7 +563,7 @@ function(input, output, session) {
     # all be set together correctly. CSS dimensions use 96 DPI so the plot
     # occupies the right physical space on screen; the PNG is rendered at the
     # user-selected DPI and the browser scales it down for retina-like sharpness.
-    # Note: generate_plot() is also used by the download handler (ggsave), which
+    # Note: generate_midpoints_plot() is also used by the download handler (ggsave), which
     # is independent of these display dimensions.
     output$midpoints_plot <- renderImage(deleteFile = TRUE, {
         dpi  <- as.integer(input$plot_dpi)
@@ -535,7 +572,7 @@ function(input, output, session) {
 
         tmpfile <- tempfile(fileext = ".png")
         png(tmpfile, width = w_px, height = h_px, res = dpi, units = "px")
-        print(generate_plot())
+        print(generate_midpoints_plot())
         dev.off()
 
         list(src    = tmpfile,
@@ -544,11 +581,31 @@ function(input, output, session) {
              alt    = "Vowel plot")
     })
 
-
-
-    ## 4. Acoustic Analysis----
     
-    ### 4.1 Pillai scores ----
+    ## 4. Trajectories plot ----
+
+    ### 4.0 Gate the tab to tracks data only ----
+    # No DARLA data and no new-fave _points.csv — those are points data
+    # (one row per token) with no time course to plot.
+    observe({
+        session$sendCustomMessage("toggleTrajectoriesTab", has_track_data())
+
+        # If the tab is open when it becomes unavailable (e.g. tracks data
+        # just got removed), bounce back to the Data tab rather than leaving
+        # the user stranded on a now-disabled pill.
+        if (!has_track_data() && isTRUE(input$main_tabs == "trajectories_tab")) {
+            updateTabsetPanel(session, "main_tabs", selected = "Data")
+        }
+    })
+
+    output$trajectories_plot <- renderImage(deleteFile = TRUE, {
+        print(generate_trajectories_plot())
+    })
+
+
+    ## 5. Acoustic Analysis ----
+    
+    ### 5.1 Pillai scores ----
     #### Pillai data ----
     
     # Here's the dataset the Pillai scores are calculated on.

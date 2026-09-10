@@ -12,7 +12,8 @@ fluidPage(
     
     tabsetPanel(
         type = "pills",
-        
+        id   = "main_tabs",
+
         ## Data tab ----
         tabPanel(
             title = "Data",
@@ -495,7 +496,38 @@ fluidPage(
             )
         ),
         
-        # TODO (possibly) : A dedicated trajectory tab
+        
+        ## Trajectories ----
+        tabPanel(
+            title = "Trajectories",
+            value = "trajectories_tab",
+            tabsetPanel(
+                tabPanel(
+                    title = "F1-F2 plot",
+                    
+                    sidebarLayout(
+                        sidebarPanel(
+                            style = "height: 90vh; overflow-y: auto;", # https://www.r-bloggers.com/2022/06/scrollbar-for-the-shiny-sidebar/
+                            width = 4,
+                            tabsetPanel(
+                                type = "tabs",
+                            )
+                        ), # end sidebarLayout
+                            
+                        ### The plot itself ----
+                        mainPanel(
+                            width = 8,
+                            
+                            shinycssloaders::withSpinner(
+                                imageOutput("trajectories_plot", width = "auto", height = "auto"),
+                                color = PIPE_BROWN,
+                                type  = 6
+                            )
+                        )
+                    )
+                )
+            )
+        ),
 
         ## Acoustic Analysis ----
         tabPanel(
@@ -649,6 +681,18 @@ fluidPage(
 
       document.addEventListener("keydown", function(e) {
         if (e.key === "Escape") closeDrawer();
+      });
+    ')),
+
+    # ── Trajectories tab gating ──────────────────────────────────────────────
+    # The tab is only usable once a "tracks" dataset (multiple rows per token,
+    # e.g. new-fave _tracks.csv) is loaded — not DARLA and not new-fave
+    # _points.csv. server.R sends this message whenever that status changes.
+    tags$script(HTML('
+      Shiny.addCustomMessageHandler("toggleTrajectoriesTab", function(enabled) {
+        var pill = document.querySelector(\'a[data-value="trajectories_tab"]\');
+        if (!pill) return;
+        pill.parentElement.classList.toggle("disabled", !enabled);
       });
     '))
 

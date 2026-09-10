@@ -39,6 +39,15 @@ body {
     color:            var(--pipe-gold-light);
     border-color:     var(--pipe-brown);
 }
+.nav-pills > li.disabled > a,
+.nav-pills > li.disabled > a:hover {
+    color:          var(--pipe-brown-light);
+    background-color: transparent;
+    border-color:   transparent;
+    cursor:         not-allowed;
+    pointer-events: none;
+    opacity:        0.5;
+}
 
 
 /* ── Inner tabs (tabsetPanel type="tabs") ──────────────── */
