@@ -143,11 +143,15 @@ fluidPage(
                             p("Select which vowel classes to display.", class = "section-hint"),
                             selectInput("vowels",
                                         label = NULL,
-                                        choices = c("FLEECE", "KIT", "FACE", "DRESS", "TRAP", "LOT", "THOUGHT", "STRUT", "GOAT", "FOOT", "GOOSE", "PRICE", "MOUTH", "CHOICE", "NURSE"),
+                                        # NEAR/START/FORCE/CURE are rhotic classes that fave_to_wells() can
+                                        # produce (new-fave data only — arpa_to_wells()/DARLA has no rhotic
+                                        # classes). They were being coded and normalized like any other
+                                        # vowel already; they just weren't selectable anywhere in the UI.
+                                        choices = c("FLEECE", "KIT", "FACE", "DRESS", "TRAP", "LOT", "THOUGHT", "STRUT", "GOAT", "FOOT", "GOOSE", "PRICE", "MOUTH", "CHOICE", "NURSE", "NEAR", "START", "FORCE", "CURE"),
                                         selected = c("FLEECE", "KIT", "FACE", "DRESS", "TRAP", "LOT", "THOUGHT", "STRUT", "GOAT", "FOOT", "GOOSE"),
                                         multiple = TRUE,
                                         selectize = FALSE,
-                                        size = 16
+                                        size = 19
                             ),
 
                             div(class = "section-head",
