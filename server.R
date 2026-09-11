@@ -250,25 +250,18 @@ function(input, output, session) {
         }
     })
     
-    # Create a trajectory df. 
+    # Create a trajectory df: every observation (one row per token per
+    # prop_time frame), not collapsed or averaged in any way. Restricted to
+    # genuine tracks uploads (is_tracks_upload) — DARLA's percent-interpolated
+    # rows also number >1 per token, but they're not real formant tracks, so
+    # unlike midpoints_df() there's no is_track_data() branch here.
     trajectories_df <- reactive({
         req(full_df())
-        
-        # Tracks have >1 row per ID
-        if (is_track_data()) {
-            full_df() |>
-                ooo4_filter_otherwise_good_data() |>
-                # TODO: Custom slider for normalized time to include
-                # filter(prop_time > 0.4,
-                #        prop_time < 0.6) |>
+        req(has_track_data())
 
-                # Matches("F[1234]") intentionally catches both raw (F1, F2) and normalized (F1_lm, F2_z, etc.) columns.
-                # Midpoints are computed for all of them.
-                summarize(across(matches("F[1234]"), \(x) mean(x, na.rm = TRUE)))
-        } else {
-            full_df() |>
-                ooo4_filter_otherwise_good_data()
-        }
+        full_df() |>
+            filter(is_tracks_upload) |>
+            ooo4_filter_otherwise_good_data()
     })
     
     
@@ -367,14 +360,6 @@ function(input, output, session) {
                    phoneme %in% input$vowels,
                    allophone_environment %in% input$environments)
     })
-    # TODO: Trajectories
-    # trajectories_df_to_plot <- reactive({
-    #     req(trajectories_df())
-    #     trajectories_df() |> 
-    #         filter(speaker_id %in% input$speaker_selection,
-    #                phoneme %in% input$vowels,
-    #                allophone_environment %in% input$environments)
-    # })
     vowel_space_df_for_hull <- reactive({
         req(midpoints_df())
         midpoints_df() |> 
@@ -601,6 +586,15 @@ function(input, output, session) {
     output$trajectories_plot <- renderImage(deleteFile = TRUE, {
         print(generate_trajectories_plot())
     })
+    
+    # TODO: Trajectories
+    # trajectories_df_to_plot <- reactive({
+    #     req(trajectories_df())
+    #     trajectories_df() |> 
+    #         filter(speaker_id %in% input$speaker_selection,
+    #                phoneme %in% input$vowels,
+    #                allophone_environment %in% input$environments)
+    # })
 
 
     ## 5. Acoustic Analysis ----
