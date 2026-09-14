@@ -11,6 +11,8 @@ and smoothed averages by allophone. These smooths are carried out using DCTS.
 Most of the same filtering and plot customizability functions that exist in the 
 main plot are now available as well.
 
+### Changed
+- Moved splash page to an About tab.
 
 ## 2026-07-30 (v0.6)
 
