@@ -50,11 +50,9 @@ Pipeline hasn't been tested robustly yet, so there will likely be issues. Please
 Here are my short-term plans for inclusion in future updates:
 
 * Better handling in plots and stats for multiple speakers.
-* Plotting trajectories
-* Incorporation of DCTs (a là Fruehwald [2024](https://jofrhwld.github.io/blog/posts/2024/07/2024-07-19_dct-r/), [2025](https://jofrhwld.github.io/dct_normalization/))
 * Additional and custom stopword lists
 * Alternative outlier removal methods
-* Toggle between transcription systems (Wells, IPA, FAVE, Trager & Block, etc.)
+* Toggle between transcription systems (Wells, IPA, FAVE, Trager & Bloch, etc.)
 * Mary-merry-marry vowel pairs
 * Additional quantitative analyses besides pillai scores
 
