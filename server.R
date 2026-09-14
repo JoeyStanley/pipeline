@@ -347,13 +347,15 @@ function(input, output, session) {
     ### 2.3 Splash screen ----
     output$splash <- renderUI({
         if (is.null(full_df())) {
-            # Splash page
+            # Empty-state message; see the About tab for the full introduction.
             div(style = "padding: 40px;",
-                includeMarkdown("splash.md"))
+                h3("Welcome to Pipeline!"),
+                p("Upload a spreadsheet of formant measurements on the left to get started."),
+                p("New here? Check out the ", strong("About"), " tab for an introduction, citation information, and references."))
         } else {
             # returns NULL when data is loaded, which renders nothing
         }
-        
+
     })
     
 

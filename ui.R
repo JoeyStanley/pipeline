@@ -5,10 +5,13 @@ fluidPage(
     ),
 
     # Application title
-    titlePanel(tagList(
-        "Pipeline",
-        tags$small(app_version, class = "app-version")
-    )),
+    titlePanel(
+        tagList(
+            "Pipeline",
+            tags$small(app_version, class = "app-version")
+        ),
+        windowTitle = "Pipeline"
+    ),
     
     tabsetPanel(
         type = "pills",
@@ -838,8 +841,14 @@ fluidPage(
                 )
                 # tabPanel("vowel shifts")
             )
-        )
+        ),
 
+        ## About ----
+        tabPanel(
+            title = "About",
+            div(style = "padding: 40px;",
+                includeMarkdown("splash.md"))
+        )
 
     ), # end tabsetPanel
 
