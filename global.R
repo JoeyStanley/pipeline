@@ -21,6 +21,7 @@ library(writexl)
 library(ggthemes)
 library(ggforce)
 library(concaveman)
+library(geomtextpath) # for labeling averaged trajectory paths directly on the line
 library(khroma)   # Paul Tol color schemes
 library(pals)     # Kelly, Glasbey, Alphabet palettes
 

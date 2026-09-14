@@ -151,10 +151,42 @@ function(input, output, session) {
         updateSelectInput(session, "speaker_selection",
                           choices  = list_of_speakers,
                           selected = new_selection)
-        
+
     })
 
-    
+    # Same, for the Trajectories tab's independent speaker selector.
+    observe({
+        req(full_df())
+        list_of_speakers <- full_df() |> pull(speaker_id) |> unique()
+
+        current_selection <- isolate(input$traj_speaker_selection)
+        still_valid <- intersect(current_selection, list_of_speakers)
+        new_selection <- if (length(still_valid) > 0) still_valid else head(list_of_speakers, 1)
+
+        updateSelectInput(session, "traj_speaker_selection",
+                          choices  = list_of_speakers,
+                          selected = new_selection)
+
+    })
+
+    # The Trajectories tab's Processing sub-tab has its own norm_method widget
+    # (traj_norm_method) for convenience, but normalization is a single global
+    # transform on full_df() (see the ooo3 observer below) — there's no such
+    # thing as a separate normalization for trajectories. These two observers
+    # just keep both copies of the control in sync, since Shiny doesn't do
+    # that automatically for two independently-id'd inputs.
+    observeEvent(input$norm_method, {
+        if (!identical(input$norm_method, input$traj_norm_method)) {
+            updateRadioButtons(session, "traj_norm_method", selected = input$norm_method)
+        }
+    }, ignoreInit = TRUE)
+    observeEvent(input$traj_norm_method, {
+        if (!identical(input$traj_norm_method, input$norm_method)) {
+            updateRadioButtons(session, "norm_method", selected = input$traj_norm_method)
+        }
+    }, ignoreInit = TRUE)
+
+
     ### 1.2 Removing data ----
     observeEvent(input$remove_data_button, {
         
@@ -583,18 +615,118 @@ function(input, output, session) {
         }
     })
 
-    output$trajectories_plot <- renderImage(deleteFile = TRUE, {
-        print(generate_trajectories_plot())
+    ### 4.1 Filter to current selection ----
+    # Independent from the Main vowel plot tab's speaker/vowel/environment selectors.
+    trajectories_df_to_plot <- reactive({
+        req(trajectories_df())
+        trajectories_df() |>
+            filter(speaker_id %in% input$traj_speaker_selection,
+                   phoneme %in% input$traj_vowels,
+                   allophone_environment %in% input$traj_environments)
     })
-    
-    # TODO: Trajectories
-    # trajectories_df_to_plot <- reactive({
-    #     req(trajectories_df())
-    #     trajectories_df() |> 
-    #         filter(speaker_id %in% input$speaker_selection,
-    #                phoneme %in% input$vowels,
-    #                allophone_environment %in% input$environments)
-    # })
+
+    ### 4.2 Plot ----
+    generate_trajectories_plot <- function() {
+        req(trajectories_df_to_plot())
+        req(nrow(trajectories_df_to_plot()) > 0)
+
+        traj_df   <- trajectories_df_to_plot()
+        color_var <- input$traj_color_variable
+        mode      <- input$trajectory_smoothing
+
+        if (mode == "smoothed") {
+            # Per token: reframe_with_dct_smooth() reconstructs each token's
+            # F1_norm/F2_norm trajectory from a handful of DCT coefficients
+            # (.order, default 5), keeping every other column untouched.
+            traj_df <- traj_df |>
+                reframe_with_dct_smooth(c(F1_norm, F2_norm),
+                                        .token_id_col = token_id,
+                                        .time_col     = prop_time,
+                                        .by           = speaker_id)
+        } else if (mode == "averaged") {
+            # By group: reframe each token to DCT coefficients, average those
+            # coefficients within each speaker/color-variable group (one curve
+            # per speaker per phoneme or allophone), then reconstruct a smooth
+            # trajectory from the averaged coefficients.
+            traj_df <- traj_df |>
+                reframe_with_dct(c(F1_norm, F2_norm),
+                                  .by           = speaker_id,
+                                  .token_id_col = token_id,
+                                  .time_col     = prop_time) |>
+                summarize(across(c(F1_norm, F2_norm), \(x) mean(x, na.rm = TRUE)),
+                          .by = c(speaker_id, all_of(color_var), .param)) |>
+                reframe_with_idct(c(F1_norm, F2_norm),
+                                    .by           = speaker_id,
+                                    .token_id_col = all_of(color_var),
+                                    .param_col    = .param)
+        }
+
+        vis_values <- sort(unique(traj_df[[color_var]]))
+
+        p <- if (mode == "averaged") {
+            # Few enough curves at this point that a textpath label reads
+            # better than a color legend.
+            ggplot(traj_df, aes(F2_norm, F1_norm, group = interaction(speaker_id, .data[[color_var]]))) +
+                geom_textpath(aes(color = .data[[color_var]], label = .data[[color_var]]),
+                              arrow = joey_arrow())
+        } else {
+            ggplot(traj_df, aes(F2_norm, F1_norm, group = token_id)) +
+                geom_path(aes(color = .data[[color_var]]), arrow = joey_arrow(), alpha = 0.6)
+        }
+
+        p <- p +
+            scale_color_manual(values = setNames(build_palette(length(vis_values), input$traj_color_palette), vis_values)) +
+            scale_x_reverse() +
+            scale_y_reverse() +
+            labs(title    = if (nzchar(input$traj_title))    input$traj_title    else NULL,
+                 subtitle = if (nzchar(input$traj_subtitle)) input$traj_subtitle else NULL,
+                 x = input$traj_x_label,
+                 y = input$traj_y_label) +
+            do.call(switch(input$traj_plot_theme,
+                           minimal = theme_minimal,
+                           classic = theme_classic,
+                           bw      = theme_bw,
+                           void    = theme_void),
+                    list(base_size = input$traj_base_size, base_family = input$traj_base_family)) +
+            theme(legend.position = if_else(input$traj_show_legend, "right", "none"))
+
+        # Averaged mode labels curves directly on the line (geom_textpath above) —
+        # a legend would just repeat that, so it overrides traj_show_legend.
+        if (mode == "averaged") p <- p + theme(legend.position = "none")
+
+        p
+    }
+
+    # Rendered live at Aesthetics > Display size dimensions, same pattern as midpoints_plot.
+    output$trajectories_plot <- renderImage(deleteFile = TRUE, {
+        dpi  <- as.integer(input$traj_plot_dpi)
+        w_px <- as.integer(input$traj_plot_width_in  * dpi)
+        h_px <- as.integer(input$traj_plot_height_in * dpi)
+
+        tmpfile <- tempfile(fileext = ".png")
+        png(tmpfile, width = w_px, height = h_px, res = dpi, units = "px")
+        print(generate_trajectories_plot())
+        dev.off()
+
+        list(src    = tmpfile,
+             width  = as.integer(input$traj_plot_width_in  * 96),
+             height = as.integer(input$traj_plot_height_in * 96),
+             alt    = "Trajectories plot")
+    })
+
+    ### 4.3 Download plot ----
+    output$traj_fig_download <- downloadHandler(
+        filename = function() { paste0(input$traj_fig_filename, ".", tolower(input$traj_fig_filetype)) },
+        content = function(file) {
+            req(trajectories_df_to_plot())
+            ggsave(file,
+                   plot   = generate_trajectories_plot(),
+                   height = input$traj_fig_height,
+                   width  = input$traj_fig_width,
+                   dpi    = input$traj_fig_dpi,
+                   device = ifelse(input$traj_fig_filetype == "PDF", cairo_pdf, tolower(input$traj_fig_filetype)))
+        }
+    )
 
 
     ## 5. Acoustic Analysis ----

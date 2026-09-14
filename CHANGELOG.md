@@ -2,6 +2,16 @@
 
 All notable changes to Pipeline are documented here, newest first.
 
+## In Progress
+
+### Added
+- A new trajectories tab displays vowel formant trajectories. Currently there 
+are three options: raw trajectories by token, smoothed trajectories by token, 
+and smoothed averages by allophone. These smooths are carried out using DCTS. 
+Most of the same filtering and plot customizability functions that exist in the 
+main plot are now available as well.
+
+
 ## 2026-07-30 (v0.6)
 
 ### Added

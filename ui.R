@@ -515,6 +515,238 @@ fluidPage(
                             width = 4,
                             tabsetPanel(
                                 type = "tabs",
+
+                                ### Speaker selection ----
+                                tabPanel(
+                                    title = "Speakers",
+                                    div(class = "section-head",
+                                        h4("Speaker"),
+                                        div(class = "section-rule"),
+                                        tags$button(type = "button", class = "help-btn",
+                                                    onclick = "openDrawer('speaker')", title = "Help", "?")
+                                    ),
+                                    p("Select one or more speakers to display and analyze.", class = "section-hint"),
+                                    selectInput("traj_speaker_selection",
+                                                label = NULL,
+                                                choices = "no speaker",
+                                                multiple = TRUE,
+                                                selectize = FALSE,
+                                                size = 20)
+                                ),
+
+                                ### Processing ----
+                                tabPanel(
+                                    title = "Processing",
+                                    div(class = "section-head",
+                                        h4("Normalization"),
+                                        div(class = "section-rule"),
+                                        tags$button(type = "button", class = "help-btn",
+                                                    onclick = "openDrawer('normalization')", title = "Help", "?")
+                                    ),
+                                    p("Adjust formant values to remove speaker-size differences.", class = "section-hint"),
+                                    # Normalization is a single global transform (see the ooo3 observer
+                                    # in server.R) — there's no separate "trajectories normalization."
+                                    # This is a second widget for the SAME norm_method value, kept in
+                                    # sync with the Main vowel plot's copy by a pair of observers in
+                                    # server.R, so it can be changed from either tab.
+                                    radioButtons("traj_norm_method", label = NULL,
+                                                 choices = list("none" = "n",
+                                                                "Nearey" = "lm",
+                                                                "Watt & Fabricius" = "wf",
+                                                                "ΔF" = "df",
+                                                                "Lobanov" = "z"),
+                                                 selected = "n",
+                                                 inline = FALSE,
+                                                 width = '100%')
+                                ),
+
+                                ### Vowel selection ----
+                                tabPanel(
+                                    title = "Vowels",
+                                    div(class = "section-head",
+                                        h4("Vowel"),
+                                        div(class = "section-rule"),
+                                        tags$button(type = "button", class = "help-btn",
+                                                    onclick = "openDrawer('vowel')", title = "Help", "?")
+                                    ),
+                                    p("Select which vowel classes to display.", class = "section-hint"),
+                                    selectInput("traj_vowels",
+                                                label = NULL,
+                                                choices = c("FLEECE", "KIT", "FACE", "DRESS", "TRAP", "LOT", "THOUGHT", "STRUT", "GOAT", "FOOT", "GOOSE", "PRICE", "MOUTH", "CHOICE", "NURSE", "NEAR", "START", "FORCE", "CURE"),
+                                                selected = c("FLEECE", "KIT", "FACE", "DRESS", "TRAP", "LOT", "THOUGHT", "STRUT", "GOAT", "FOOT", "GOOSE"),
+                                                multiple = TRUE,
+                                                selectize = FALSE,
+                                                size = 19
+                                    ),
+
+                                    div(class = "section-head",
+                                        h4("Environments"),
+                                        div(class = "section-rule"),
+                                        tags$button(type = "button", class = "help-btn",
+                                                    onclick = "openDrawer('environments')", title = "Help", "?")
+                                    ),
+                                    p("Filter by phonological environment (e.g. prelateral, prenasal).", class = "section-hint"),
+                                    selectInput("traj_environments",
+                                                label = NULL,
+                                                choices = c("prelateral", "prerhotic", "prevelar", "prenasal", "prevelarnasal", "prevoiceless", "post-Y", "postcoronal", "elsewhere"),
+                                                selected = c("elsewhere"),
+                                                multiple = TRUE,
+                                                selectize = FALSE,
+                                                size = 10
+                                    )
+                                ),
+
+                                ### Plot (smoothing tier) ----
+                                tabPanel(
+                                    title = "Plot",
+                                    # Temporary, for comparing tiers while building this tab out —
+                                    # will likely be replaced/expanded later.
+                                    radioButtons("trajectory_smoothing", "Smoothing",
+                                                 choices  = c("Raw"                        = "raw",
+                                                              "Smoothed (DCT, per token)"    = "smoothed",
+                                                              "Averaged (DCT, by group)"     = "averaged"),
+                                                 selected = "raw",
+                                                 inline   = FALSE)
+                                ),
+
+                                ### Aesthetics ----
+                                tabPanel(
+                                    title = "Aesthetics",
+
+                                    div(class = "section-head",
+                                        h4("Labels"),
+                                        div(class = "section-rule"),
+                                        tags$button(type = "button", class = "help-btn",
+                                                    onclick = "openDrawer('labels')", title = "Help", "?")
+                                    ),
+                                    p("Add a title, subtitle, and axis labels to the plot.", class = "section-hint"),
+                                    fluidRow(
+                                        column(6, textInput("traj_title",    label = "Title",    value = "")),
+                                        column(6, textInput("traj_subtitle", label = "Subtitle", value = ""))
+                                    ),
+                                    fluidRow(
+                                        column(6, textInput("traj_x_label", label = "x-axis", value = "F2")),
+                                        column(6, textInput("traj_y_label", label = "y-axis", value = "F1"))
+                                    ),
+
+                                    hr(),
+                                    div(class = "section-head",
+                                        h4("Typography"),
+                                        div(class = "section-rule"),
+                                        tags$button(type = "button", class = "help-btn",
+                                                    onclick = "openDrawer('typography')", title = "Help", "?")
+                                    ),
+                                    p("Set the font size and family used throughout the plot.", class = "section-hint"),
+                                    fluidRow(
+                                        column(6,
+                                               sliderInput("traj_base_size", label = "Base font size",
+                                                           min = 0, max = 48, value = 16,
+                                                           step = 1, round = TRUE, width = "100%")
+                                        ),
+                                        column(6,
+                                               selectInput("traj_base_family", label = "Font family",
+                                                           choices  = c("Avenir", "Courier", "Helvetica",
+                                                                        "Palatino", "Times"),
+                                                           selected = "Avenir",
+                                                           multiple = FALSE, selectize = TRUE)
+                                        )
+                                    ),
+
+                                    hr(),
+                                    div(class = "section-head",
+                                        h4("Color"),
+                                        div(class = "section-rule"),
+                                        tags$button(type = "button", class = "help-btn",
+                                                    onclick = "openDrawer('color')", title = "Help", "?")
+                                    ),
+                                    p("Choose what variable drives color and which palette to use.", class = "section-hint"),
+                                    fluidRow(
+                                        column(6,
+                                               selectInput("traj_color_variable", label = "One color per...",
+                                                           choices  = c("phoneme", "allophone"),
+                                                           selected = "phoneme",
+                                                           multiple = FALSE, selectize = TRUE)
+                                        ),
+                                        column(6,
+                                               selectInput("traj_color_palette", label = "Palette",
+                                                           choices  = c("Paul Tol" = "tol",
+                                                                        "Kelly"    = "kelly",
+                                                                        "Glasbey"  = "glasbey",
+                                                                        "Alphabet" = "alphabet"),
+                                                           selected = "kelly",
+                                                           multiple = FALSE, selectize = TRUE)
+                                        )
+                                    ),
+                                    # Averaged-by-group mode labels curves directly on the line instead
+                                    # (see generate_trajectories_plot() in server.R), so this is ignored there.
+                                    checkboxInput("traj_show_legend", label = "Show legend", value = FALSE),
+
+                                    hr(),
+                                    div(class = "section-head",
+                                        h4("Theme"),
+                                        div(class = "section-rule"),
+                                        tags$button(type = "button", class = "help-btn",
+                                                    onclick = "openDrawer('theme')", title = "Help", "?")
+                                    ),
+                                    p("Set the overall visual style of the plot.", class = "section-hint"),
+                                    selectInput("traj_plot_theme", label = NULL,
+                                                choices  = c("Minimal"       = "minimal",
+                                                             "Classic"       = "classic",
+                                                             "Black & white" = "bw",
+                                                             "Void"          = "void"),
+                                                selected = "minimal",
+                                                multiple = FALSE, selectize = FALSE),
+
+                                    hr(),
+                                    div(class = "section-head",
+                                        h4("Display size"),
+                                        div(class = "section-rule"),
+                                        tags$button(type = "button", class = "help-btn",
+                                                    onclick = "openDrawer('display_size')", title = "Help", "?")
+                                    ),
+                                    p("Control the rendered dimensions and resolution of the plot.", class = "section-hint"),
+                                    fluidRow(
+                                        column(4, numericInput("traj_plot_width_in",  label = "Width (in)",
+                                                               value = 9, min = 1, max = 20, step = 0.5)),
+                                        column(4, numericInput("traj_plot_height_in", label = "Height (in)",
+                                                               value = 7,  min = 1, max = 20, step = 0.5)),
+                                        column(4, numericInput("traj_plot_dpi",       label = "DPI",
+                                                               value = 100, min = 72, max = 300, step = 1))
+                                    )
+                                ),
+
+                                ### Download plot ----
+                                tabPanel(
+                                    title = "Download",
+                                    fluidRow(
+                                        column(6,
+                                               numericInput("traj_fig_height",
+                                                            label = h4("Height (inches)"),
+                                                            value = 7,
+                                                            step = 0.1),
+                                               numericInput("traj_fig_width",
+                                                            label = h4("Width (inches)"),
+                                                            value = 9,
+                                                            step = 0.1),
+                                               numericInput("traj_fig_dpi",
+                                                            label = h4("DPI"),
+                                                            value = 300,
+                                                            step = 50)
+                                        ),
+                                        column(6,
+                                               textInput("traj_fig_filename",
+                                                         label = h4("File name"),
+                                                         value = "trajectories_plot"),
+                                               selectInput("traj_fig_filetype",
+                                                           label = h4("File type"),
+                                                           choices = c("JPG", "PNG", "PDF"),
+                                                           selected = "JPG",
+                                                           width = "100%")
+                                        )
+                                    ),
+                                    hr(),
+                                    downloadButton("traj_fig_download", "Download")
+                                )
                             )
                         ), # end sidebarLayout
                             
