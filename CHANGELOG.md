@@ -2,7 +2,7 @@
 
 All notable changes to Pipeline are documented here, newest first.
 
-## In Progress
+## 2026-09-15 (v0.7.0)
 
 ### Added
 - A new trajectories tab displays vowel formant trajectories. Currently there 
