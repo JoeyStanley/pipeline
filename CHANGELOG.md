@@ -2,7 +2,7 @@
 
 All notable changes to Pipeline are documented here, newest first.
 
-## 2026-10-04
+## 2026-10-04 (v.0.7.1)
 
 ### Added
 - Temporary developer-facing logging of plot render errors (`R/logging.R`): the
