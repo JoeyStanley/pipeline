@@ -2,6 +2,17 @@
 
 All notable changes to Pipeline are documented here, newest first.
 
+## 2026-10-04
+
+### Added
+- Temporary developer-facing logging of plot render errors (`R/logging.R`): the
+  error, call stack, session state, and `sessionInfo()` go to stderr and to
+  `logs/render_errors.log`, since Shiny Server hides error details from users.
+
+### Fixed
+- A failed plot render no longer leaves its graphics device open, which on the
+  server could pile up until every plot failed with "too many open devices".
+
 ## 2026-09-15 (v0.7.0)
 
 ### Added

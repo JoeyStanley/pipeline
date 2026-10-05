@@ -56,3 +56,6 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 .positai
+
+# Server-side render error logs (R/logging.R)
+logs/

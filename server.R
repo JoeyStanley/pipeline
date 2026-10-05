@@ -11,8 +11,16 @@ function(input, output, session) {
     
     # Keep track of which normalizations have been done on this dataset. (Updates when dataset changes.)
     completed_normalizations <- reactiveVal(character(0))
-    
-    
+
+    # Snapshot of this session's state for log_render_error() (R/logging.R), so a
+    # server-side error can be reproduced locally with the same files and settings.
+    session_context <- function() {
+        isolate(list(loaded_files = loaded_files(),
+                     full_df_dim  = dim(full_df()),
+                     inputs       = reactiveValuesToList(input)))
+    }
+
+
     
     ## 1. Data management ----
 
@@ -584,20 +592,27 @@ function(input, output, session) {
     # user-selected DPI and the browser scales it down for retina-like sharpness.
     # Note: generate_midpoints_plot() is also used by the download handler (ggsave), which
     # is independent of these display dimensions.
+    # Errors are logged via log_render_error() (R/logging.R) and then still shown as usual.
     output$midpoints_plot <- renderImage(deleteFile = TRUE, {
-        dpi  <- as.integer(input$plot_dpi)
-        w_px <- as.integer(input$plot_width_in  * dpi)
-        h_px <- as.integer(input$plot_height_in * dpi)
+        withCallingHandlers({
+            dpi  <- as.integer(input$plot_dpi)
+            w_px <- as.integer(input$plot_width_in  * dpi)
+            h_px <- as.integer(input$plot_height_in * dpi)
 
-        tmpfile <- tempfile(fileext = ".png")
-        png(tmpfile, width = w_px, height = h_px, res = dpi, units = "px")
-        print(generate_midpoints_plot())
-        dev.off()
+            tmpfile <- tempfile(fileext = ".png")
+            png(tmpfile, width = w_px, height = h_px, res = dpi, units = "px")
+            # Close the device even if the plot errors. Otherwise every failed render -- including
+            # req() bail-outs, e.g. when the filters leave nothing to plot -- leaks an open device
+            # in the long-running server process, and after ~60 of them png() itself fails
+            # ("too many open devices") for every user until the app restarts.
+            on.exit(dev.off(), add = TRUE)
+            print(generate_midpoints_plot())
 
-        list(src    = tmpfile,
-             width  = as.integer(input$plot_width_in  * 96),
-             height = as.integer(input$plot_height_in * 96),
-             alt    = "Vowel plot")
+            list(src    = tmpfile,
+                 width  = as.integer(input$plot_width_in  * 96),
+                 height = as.integer(input$plot_height_in * 96),
+                 alt    = "Vowel plot")
+        }, error = \(e) log_render_error(e, "midpoints_plot", session_context()))
     })
 
     
@@ -701,19 +716,21 @@ function(input, output, session) {
 
     # Rendered live at Aesthetics > Display size dimensions, same pattern as midpoints_plot.
     output$trajectories_plot <- renderImage(deleteFile = TRUE, {
-        dpi  <- as.integer(input$traj_plot_dpi)
-        w_px <- as.integer(input$traj_plot_width_in  * dpi)
-        h_px <- as.integer(input$traj_plot_height_in * dpi)
+        withCallingHandlers({
+            dpi  <- as.integer(input$traj_plot_dpi)
+            w_px <- as.integer(input$traj_plot_width_in  * dpi)
+            h_px <- as.integer(input$traj_plot_height_in * dpi)
 
-        tmpfile <- tempfile(fileext = ".png")
-        png(tmpfile, width = w_px, height = h_px, res = dpi, units = "px")
-        print(generate_trajectories_plot())
-        dev.off()
+            tmpfile <- tempfile(fileext = ".png")
+            png(tmpfile, width = w_px, height = h_px, res = dpi, units = "px")
+            on.exit(dev.off(), add = TRUE)  # see midpoints_plot
+            print(generate_trajectories_plot())
 
-        list(src    = tmpfile,
-             width  = as.integer(input$traj_plot_width_in  * 96),
-             height = as.integer(input$traj_plot_height_in * 96),
-             alt    = "Trajectories plot")
+            list(src    = tmpfile,
+                 width  = as.integer(input$traj_plot_width_in  * 96),
+                 height = as.integer(input$traj_plot_height_in * 96),
+                 alt    = "Trajectories plot")
+        }, error = \(e) log_render_error(e, "trajectories_plot", session_context()))
     })
 
     ### 4.3 Download plot ----
