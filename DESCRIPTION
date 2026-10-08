@@ -1,6 +1,6 @@
 Package: Pipeline
 Title: Sociophonetic Vowel Processing Pipeline
-Version: 0.7.1
+Version: 0.7.2
 Date: 2026-10-04
 Authors@R: person("Joey", "Stanley",
     email = "joey_stanley@byu.edu",
