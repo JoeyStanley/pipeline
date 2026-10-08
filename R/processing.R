@@ -62,11 +62,20 @@ prep_newfave_data <- function(.df) {
         # Get the columns I want with the names I want in the order I want
         clean_names() |>
         
-        # new-fave's own `id` column is only unique within a single source recording,
-        # so it can't be trusted directly as a token identifier: files combining many
-        # speakers/tasks into one CSV reset it, causing unrelated tokens to collide.
-        select(source_file, speaker_id = file_name, word,
+        select(source_file, file_name, group, word,
                id, pre_seg, fol_seg, stress, label, time, duration = dur, prop_time, F1 = f1, F2 = f2, F3 = f3) |>
+
+        # `group` is the TextGrid's word+phone tier group: "group_0" if the tiers were just named
+        # word/phone, otherwise usually the speaker's name. A recording with more than one (e.g.
+        # interviewer and interviewee) holds more than one speaker, so keep them apart.
+        mutate(speaker_id = if (n_distinct(group) > 1) paste(file_name, group, sep = "_") else file_name,
+               .by = file_name, .after = source_file) |>
+
+        # new-fave's `id` ([tier group]-[word tier]-[word]-[vowel], so it already covers `group`)
+        # restarts in every recording, and a CSV can combine several recordings' outputs. Only
+        # source_file + file_name + id identifies a token across everything that gets loaded.
+        mutate(token_id = paste(source_file, file_name, id, sep = "_")) |>
+        select(-file_name, -group) |>
 
         # Fix transcriptions
         process_preliquids() |>
@@ -75,9 +84,6 @@ prep_newfave_data <- function(.df) {
 
         # light processing
         mutate(word = tolower(word),
-               # Prefix with source_file: id alone is only unique within a single
-               # upload, and collides if the same speaker appears across multiple uploads.
-               token_id = paste(source_file, id, sep = "_"),
                across(c(time, duration, F1:F3, prop_time), ~round(., 4))) |>
         manually_reclassify_some_words()
 }

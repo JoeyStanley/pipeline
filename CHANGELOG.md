@@ -2,6 +2,23 @@
 
 All notable changes to Pipeline are documented here, newest first.
 
+## 2026-10-08
+
+### Added
+- A warning when a new-fave tracks upload has token IDs shared by more than
+  one token (rows under one ID that disagree on word or duration). This happens
+  when a CSV stacks several new-fave outputs in a way Pipeline can't tell apart.
+
+### Fixed
+- Tokens from different recordings colliding when one CSV combines several
+  new-fave outputs: token IDs now include new-fave's `file_name`, since its
+  `id` restarts in every recording. On a combined `_points.csv`, the collisions
+  made the data look like tracks data, so the midpoint window and track
+  normalization left only a few hundred diphthong rows.
+- Speakers in a multi-speaker TextGrid being merged into one: when a recording
+  has more than one tier group, each group is now its own speaker
+  (`file_name_group`).
+
 ## 2026-10-04 (v.0.7.1)
 
 ### Added

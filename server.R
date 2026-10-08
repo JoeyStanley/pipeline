@@ -109,6 +109,28 @@ function(input, output, session) {
                              cleaned <- cleaned |> mutate(upload_source    = input$data_source,
                                                           is_tracks_upload = has_tracks_signature)
 
+                             # Every frame of a token shares its word and duration, so a token_id whose rows
+                             # disagree on either has unrelated tokens merged into it -- e.g. a CSV that stacks
+                             # new-fave outputs in a way prep_newfave_data() can't tell apart. Only tracks data
+                             # is checked: there token_id groups a token's frames, while nothing downstream
+                             # groups points rows by token_id, so a repeat there is harmless.
+                             if (has_tracks_signature) {
+                                 n_collided <- cleaned |>
+                                     summarize(n = n_distinct(word, duration), .by = token_id) |>
+                                     filter(n > 1) |>
+                                     nrow()
+                                 if (n_collided > 0) {
+                                     showNotification(
+                                         ui       = paste0(n_collided, ' token IDs in "', this_file_name, '" are shared by more than one token. ',
+                                                           "This usually means the file combines several new-fave outputs in a way Pipeline ",
+                                                           "can't tell apart, and those tokens' trajectories may be merged. ",
+                                                           "Uploading each new-fave output as its own file avoids this."),
+                                         type     = "warning",
+                                         duration = NULL
+                                     )
+                                 }
+                             }
+
                              incProgress(1/4, message = "Pulling out all the stops", detail = "Step 1: Coding allophones…")
                              ooo1 <- ooo1_code_allophones(cleaned)
                              
