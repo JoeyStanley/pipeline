@@ -2,7 +2,7 @@
 
 All notable changes to Pipeline are documented here, newest first.
 
-## 2026-10-08
+## 2026-10.13 (v.0.7.3)
 
 ### Changed
 - Developer-facing error logging (`R/logging.R`) now covers more than plot
@@ -18,6 +18,7 @@ All notable changes to Pipeline are documented here, newest first.
 - Each distinct error is logged once per session, since an error in a reactive
   reaches every output that depends on it.
 - A message on stderr at startup if `logs/` isn't writable.
+- Updated About page and extensively rewrote it. Simplified the README page on Github.
 
 ## 2026-10-08 (v0.7.2)
 
