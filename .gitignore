@@ -57,5 +57,5 @@ po/*~
 rsconnect/
 .positai
 
-# Server-side render error logs (R/logging.R)
+# Server-side error logs (R/logging.R)
 logs/
