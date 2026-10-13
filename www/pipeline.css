@@ -302,11 +302,29 @@ h3, h4 {
 }
 
 /* ── About page ────────────────────────────────────────── */
-/* Keep the splash text at a comfortable reading width     */
+/* Keep the splash text at a comfortable reading width.    */
+/* Wider than a plain page since the tab list takes 1/4.   */
 .about-page {
-    max-width: 800px;
+    max-width: 1100px;
     margin:    0 auto;
     padding:   40px;
+}
+
+/* Changelog under About > Updates (print_changelog() in R/markdown.R) */
+.changelog {
+    max-height:    400px;
+    overflow-y:    auto;
+    background:    #fff;
+    border:        1px solid var(--pipe-gold-light);
+    border-left:   3px solid var(--pipe-gold);
+    border-radius: 0 4px 4px 0;
+    padding:       4px 16px 12px;
+    margin-bottom: 16px;
+}
+.changelog h5 {
+    color:       var(--pipe-brown-mid);
+    font-weight: bold;
+    margin:      12px 0 4px;
 }
 
 /* ── Horizontal rules ──────────────────────────────────── */

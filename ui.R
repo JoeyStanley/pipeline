@@ -847,7 +847,7 @@ fluidPage(
         tabPanel(
             title = "About",
             div(class = "about-page",
-                includeMarkdown("splash.md"))
+                markdown_tabs("splash.md", id = "about_tabs"))
         )
 
     ), # end tabsetPanel
