@@ -846,7 +846,7 @@ fluidPage(
         ## About ----
         tabPanel(
             title = "About",
-            div(style = "padding: 40px;",
+            div(class = "about-page",
                 includeMarkdown("splash.md"))
         )
 

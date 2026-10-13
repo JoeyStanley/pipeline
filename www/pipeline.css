@@ -301,6 +301,14 @@ h3, h4 {
     font-weight:    bold;
 }
 
+/* ── About page ────────────────────────────────────────── */
+/* Keep the splash text at a comfortable reading width     */
+.about-page {
+    max-width: 800px;
+    margin:    0 auto;
+    padding:   40px;
+}
+
 /* ── Horizontal rules ──────────────────────────────────── */
 hr {
     border-color: var(--pipe-gold-light);
