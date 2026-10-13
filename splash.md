@@ -52,7 +52,7 @@ See the "Citations and References" tab to the left for how to cite each of these
 
 Please be patient as I work on Pipeline. There are many moving parts and I can't foresee all the use cases users present me with. 
 
-If you are stuck, feel free to email me (Joey Stanley) at pipeline.ling@gmail.com.
+If you are stuck, feel free to email me (Joey Stanley) at joey_stanley@gmail.com.
 
 ### Updates
 
