@@ -1,6 +1,6 @@
 
-# Increase max upload size from 5MG to 100MB: https://stackoverflow.com/questions/18037737/how-to-change-maximum-upload-size-exceeded-restriction-in-shiny-and-save-user
-options(shiny.maxRequestSize=100*1024^2)
+# Increase max upload size from 5MG to 200MB: https://stackoverflow.com/questions/18037737/how-to-change-maximum-upload-size-exceeded-restriction-in-shiny-and-save-user
+options(shiny.maxRequestSize=200*1024^2)
 
 function(input, output, session) {
     
@@ -12,12 +12,40 @@ function(input, output, session) {
     # Keep track of which normalizations have been done on this dataset. (Updates when dataset changes.)
     completed_normalizations <- reactiveVal(character(0))
 
-    # Snapshot of this session's state for log_render_error() (R/logging.R), so a
+    # Snapshot of this session's state for log_error() (R/logging.R), so a
     # server-side error can be reproduced locally with the same files and settings.
     session_context <- function() {
         isolate(list(loaded_files = loaded_files(),
                      full_df_dim  = dim(full_df()),
                      inputs       = reactiveValuesToList(input)))
+    }
+
+    # An error in a reactive reaches every output that depends on it, so each distinct error
+    # is only logged once per session.
+    logged_errors <- character(0)
+    log_once <- function(e, where) {
+        key <- paste(conditionMessage(e), deparse1(conditionCall(e)))
+        if (!key %in% logged_errors) {
+            logged_errors <<- c(logged_errors, key)
+            log_error(e, where, session_context())
+        }
+    }
+
+    # Wraps an output's code so its errors get logged and then shown as usual. Outputs need
+    # this rather than onUnhandledError() below: on Shiny Server, Shiny swaps an output's
+    # error for the sanitized "An error has occurred" one before that hook sees it.
+    log_errors <- function(where, expr) {
+        withCallingHandlers(expr, error = \(e) log_once(e, where))
+    }
+
+    # Errors in observers (e.g. the normalization step) aren't sanitized. Shiny closes the
+    # session over them, after calling this hook with the original error. Non-fatal errors
+    # here are output errors, which log_errors() already handles.
+    # (onUnhandledError() needs Shiny >= 1.8.1; without it, these only reach stderr.)
+    if (packageVersion("shiny") >= "1.8.1") {
+        onUnhandledError(function(e) {
+            if (inherits(e, "shiny.error.fatal")) log_once(e, "an observer (session closed)")
+        })
     }
 
 
@@ -85,9 +113,12 @@ function(input, output, session) {
                              path_to_data <- input$uploaded_data$datapath
                          }
                          
-                         # Don't crash if darla data is uploaded with the new-fave button and vice versa
-                         tryCatch({
-                             raw <- read_csv(path_to_data, show_col_types = FALSE) |> 
+                         # Don't crash if darla data is uploaded with the new-fave button and vice versa.
+                         # The user sees the error message; the log also gets the call stack and the
+                         # file's column names (not its data), which is usually enough to tell why.
+                         raw <- NULL
+                         tryCatch(withCallingHandlers({
+                             raw <- read_csv(path_to_data, show_col_types = FALSE) |>
                                  # keep source file to allow for removing later on
                                  mutate(source_file = this_file_name) 
                              
@@ -149,8 +180,10 @@ function(input, output, session) {
                              full_df(full_df() |> select(-matches("F[1234]_[a-z]+$")))
                              # After adding data, reset what normalization procedures have been done.
                              completed_normalizations(character(0))
-                             
-                         }, error = function(e) {
+
+                         }, error = \(e) log_error(e, "upload", c(session_context(), list(upload_columns = names(raw))))),
+                         # (log_error() directly, not log_once(): the same bad file uploaded twice should show up twice.)
+                         error = function(e) {
                              showNotification(
                                  ui       = paste("Processing failed. Please check that your data source selection (e.g. DARLA vs. new-fave)",
                                                   "matches the file you uploaded.",
@@ -392,9 +425,9 @@ function(input, output, session) {
     ### 2.4 Export data ----
     output$export_processed <- downloadHandler(
         filename = function() { "pipeline_output.csv" },
-        content  = function(file) {
+        content  = function(file) log_errors("export_processed", {
             full_df() |> write_csv(file = file)
-        }
+        })
     )
     
 
@@ -403,7 +436,7 @@ function(input, output, session) {
         
         
         filename = function() { paste0(input$fig_filename, ".", tolower(input$fig_filetype)) },
-        content = function(file) {
+        content = function(file) log_errors("fig_download", {
             req(full_df()) # require some data to prevent crashing
             ggsave(file,
                    plot   = generate_midpoints_plot(),
@@ -411,7 +444,7 @@ function(input, output, session) {
                    width  = input$fig_width,
                    dpi    = input$fig_dpi,
                    device = ifelse(input$fig_filetype == "PDF", cairo_pdf, tolower(input$fig_filetype)))
-        }
+        })
     )
 
 
@@ -614,9 +647,9 @@ function(input, output, session) {
     # user-selected DPI and the browser scales it down for retina-like sharpness.
     # Note: generate_midpoints_plot() is also used by the download handler (ggsave), which
     # is independent of these display dimensions.
-    # Errors are logged via log_render_error() (R/logging.R) and then still shown as usual.
+    # Errors are logged via log_errors() (see the top of this file) and then still shown as usual.
     output$midpoints_plot <- renderImage(deleteFile = TRUE, {
-        withCallingHandlers({
+        log_errors("midpoints_plot", {
             dpi  <- as.integer(input$plot_dpi)
             w_px <- as.integer(input$plot_width_in  * dpi)
             h_px <- as.integer(input$plot_height_in * dpi)
@@ -634,7 +667,7 @@ function(input, output, session) {
                  width  = as.integer(input$plot_width_in  * 96),
                  height = as.integer(input$plot_height_in * 96),
                  alt    = "Vowel plot")
-        }, error = \(e) log_render_error(e, "midpoints_plot", session_context()))
+        })
     })
 
     
@@ -738,7 +771,7 @@ function(input, output, session) {
 
     # Rendered live at Aesthetics > Display size dimensions, same pattern as midpoints_plot.
     output$trajectories_plot <- renderImage(deleteFile = TRUE, {
-        withCallingHandlers({
+        log_errors("trajectories_plot", {
             dpi  <- as.integer(input$traj_plot_dpi)
             w_px <- as.integer(input$traj_plot_width_in  * dpi)
             h_px <- as.integer(input$traj_plot_height_in * dpi)
@@ -752,13 +785,13 @@ function(input, output, session) {
                  width  = as.integer(input$traj_plot_width_in  * 96),
                  height = as.integer(input$traj_plot_height_in * 96),
                  alt    = "Trajectories plot")
-        }, error = \(e) log_render_error(e, "trajectories_plot", session_context()))
+        })
     })
 
     ### 4.3 Download plot ----
     output$traj_fig_download <- downloadHandler(
         filename = function() { paste0(input$traj_fig_filename, ".", tolower(input$traj_fig_filetype)) },
-        content = function(file) {
+        content = function(file) log_errors("traj_fig_download", {
             req(trajectories_df_to_plot())
             ggsave(file,
                    plot   = generate_trajectories_plot(),
@@ -766,7 +799,7 @@ function(input, output, session) {
                    width  = input$traj_fig_width,
                    dpi    = input$traj_fig_dpi,
                    device = ifelse(input$traj_fig_filetype == "PDF", cairo_pdf, tolower(input$traj_fig_filetype)))
-        }
+        })
     )
 
 
@@ -838,26 +871,28 @@ function(input, output, session) {
         if (!pillai_valid()$valid) return("NA")
         round(exp(1)/(nrow(pillai_df())/2),3)
     })
-    output$pillai_score <- renderText({ 
+    output$pillai_score <- renderText(log_errors("pillai_score", {
         if (!pillai_valid()$valid) return("NA")
-        pillai_df() |> 
-            summarize(pillai = pillai(cbind(F1_norm, F2_norm) ~ allophone)) |> 
-            pull() |> 
+        pillai_df() |>
+            summarize(pillai = pillai(cbind(F1_norm, F2_norm) ~ allophone)) |>
+            pull() |>
             round(3)
-    })
-    output$pillai_p <- renderText({
+    }))
+    output$pillai_p <- renderText(log_errors("pillai_p", {
         if (!pillai_valid()$valid) return("NA")
-        p <- pillai_df() |> 
-            summarize(p = manova_p(cbind(F1_norm, F2_norm) ~ allophone)) |> 
+        p <- pillai_df() |>
+            summarize(p = manova_p(cbind(F1_norm, F2_norm) ~ allophone)) |>
             pull()
         paste(ifelse(p < 0.001, "< 0.001", round(p, 3)))
-    })
+    }))
     
 
     #### Pillai plot ----
     
-    output$vowel_pair_plot <- renderPlot({
-        
+    # Printed inside log_errors() rather than returned for renderPlot() to print, since most
+    # ggplot errors happen when the plot is built for printing.
+    output$vowel_pair_plot <- renderPlot(log_errors("vowel_pair_plot", print({
+
         # Security checks
         req(pillai_valid()$valid)
         req(nrow(pillai_df_raw()) > 0)
@@ -890,5 +925,5 @@ function(input, output, session) {
             scale_y_reverse() +
             theme_minimal() +
             theme(legend.position = "none")
-    })
+    })))
 }

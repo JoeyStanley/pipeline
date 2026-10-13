@@ -4,6 +4,23 @@ All notable changes to Pipeline are documented here, newest first.
 
 ## 2026-10-08
 
+### Changed
+- Developer-facing error logging (`R/logging.R`) now covers more than plot
+  renders, and reports go to `logs/errors.log` (was `logs/render_errors.log`)
+  with the app version in each entry. Newly logged:
+  - Upload/processing failures. Users still see the error notification; the
+    log also gets the call stack and the uploaded file's column names (not its
+    data).
+  - Errors in observers that crash the session (e.g. during normalization),
+    via `onUnhandledError()`, with Shiny's stack trace and `server.R` line
+    numbers.
+  - The Pillai plot, Pillai score and p-value, and the three download handlers.
+- Each distinct error is logged once per session, since an error in a reactive
+  reaches every output that depends on it.
+- A message on stderr at startup if `logs/` isn't writable.
+
+## 2026-10-08 (v0.7.2)
+
 ### Added
 - A warning when a new-fave tracks upload has token IDs shared by more than
   one token (rows under one ID that disagree on word or duration). This happens
